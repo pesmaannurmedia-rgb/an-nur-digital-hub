@@ -31,16 +31,43 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, Megaphone, Bell, Calendar, AlertTriangle, Info, Gift, Star, Heart, BookOpen, Users } from 'lucide-react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
+
+// Icon options for announcements
+const iconOptions = [
+  { value: 'megaphone', label: 'Megaphone', icon: Megaphone },
+  { value: 'bell', label: 'Bell', icon: Bell },
+  { value: 'calendar', label: 'Kalender', icon: Calendar },
+  { value: 'alert', label: 'Peringatan', icon: AlertTriangle },
+  { value: 'info', label: 'Info', icon: Info },
+  { value: 'gift', label: 'Hadiah', icon: Gift },
+  { value: 'star', label: 'Bintang', icon: Star },
+  { value: 'heart', label: 'Hati', icon: Heart },
+  { value: 'book', label: 'Buku', icon: BookOpen },
+  { value: 'users', label: 'Komunitas', icon: Users },
+];
+
+const getIconComponent = (iconName: string) => {
+  const found = iconOptions.find(opt => opt.value === iconName);
+  return found?.icon || Megaphone;
+};
 
 const announcementSchema = z.object({
   title: z.string().min(1, 'Judul wajib diisi'),
   content: z.string().optional(),
   link: z.string().url('URL tidak valid').optional().or(z.literal('')),
+  icon: z.string(),
   is_active: z.boolean(),
 });
 
@@ -51,6 +78,7 @@ interface Announcement {
   title: string;
   content: string | null;
   link: string | null;
+  icon: string | null;
   is_active: boolean | null;
   published_at: string;
   created_at: string;
@@ -70,6 +98,7 @@ export default function AdminAnnouncements() {
       title: '',
       content: '',
       link: '',
+      icon: 'megaphone',
       is_active: true,
     },
   });
@@ -105,6 +134,7 @@ export default function AdminAnnouncements() {
       title: '',
       content: '',
       link: '',
+      icon: 'megaphone',
       is_active: true,
     });
     setIsDialogOpen(true);
@@ -116,6 +146,7 @@ export default function AdminAnnouncements() {
       title: announcement.title,
       content: announcement.content || '',
       link: announcement.link || '',
+      icon: announcement.icon || 'megaphone',
       is_active: announcement.is_active ?? true,
     });
     setIsDialogOpen(true);
@@ -131,6 +162,7 @@ export default function AdminAnnouncements() {
             title: values.title,
             content: values.content || null,
             link: values.link || null,
+            icon: values.icon,
             is_active: values.is_active,
           })
           .eq('id', editingAnnouncement.id);
@@ -142,6 +174,7 @@ export default function AdminAnnouncements() {
           title: values.title,
           content: values.content || null,
           link: values.link || null,
+          icon: values.icon,
           is_active: values.is_active,
         }]);
 
@@ -181,6 +214,9 @@ export default function AdminAnnouncements() {
     }
   };
 
+  const selectedIcon = form.watch('icon');
+  const SelectedIconComponent = getIconComponent(selectedIcon);
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -203,6 +239,42 @@ export default function AdminAnnouncements() {
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="icon"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Icon</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue>
+                              <div className="flex items-center gap-2">
+                                <SelectedIconComponent className="h-4 w-4" />
+                                <span>{iconOptions.find(o => o.value === field.value)?.label}</span>
+                              </div>
+                            </SelectValue>
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {iconOptions.map((option) => {
+                            const IconComp = option.icon;
+                            return (
+                              <SelectItem key={option.value} value={option.value}>
+                                <div className="flex items-center gap-2">
+                                  <IconComp className="h-4 w-4" />
+                                  <span>{option.label}</span>
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <FormField
                   control={form.control}
                   name="title"
@@ -287,6 +359,7 @@ export default function AdminAnnouncements() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Icon</TableHead>
                 <TableHead>Judul</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Tanggal</TableHead>
@@ -296,57 +369,65 @@ export default function AdminAnnouncements() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8">
+                  <TableCell colSpan={5} className="text-center py-8">
                     <Loader2 className="h-6 w-6 animate-spin mx-auto" />
                   </TableCell>
                 </TableRow>
               ) : announcements.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                     Belum ada pengumuman
                   </TableCell>
                 </TableRow>
               ) : (
-                announcements.map((announcement) => (
-                  <TableRow key={announcement.id}>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{announcement.title}</p>
-                        {announcement.link && (
-                          <p className="text-sm text-muted-foreground truncate max-w-xs">
-                            {announcement.link}
-                          </p>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={announcement.is_active ? 'default' : 'secondary'}>
-                        {announcement.is_active ? 'Aktif' : 'Nonaktif'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {format(new Date(announcement.published_at), 'd MMM yyyy', { locale: id })}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => openEditDialog(announcement)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => deleteAnnouncement(announcement.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+                announcements.map((announcement) => {
+                  const IconComp = getIconComponent(announcement.icon || 'megaphone');
+                  return (
+                    <TableRow key={announcement.id}>
+                      <TableCell>
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <IconComp className="h-5 w-5 text-primary" />
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{announcement.title}</p>
+                          {announcement.link && (
+                            <p className="text-sm text-muted-foreground truncate max-w-xs">
+                              {announcement.link}
+                            </p>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={announcement.is_active ? 'default' : 'secondary'}>
+                          {announcement.is_active ? 'Aktif' : 'Nonaktif'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {format(new Date(announcement.published_at), 'd MMM yyyy', { locale: id })}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openEditDialog(announcement)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => deleteAnnouncement(announcement.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>

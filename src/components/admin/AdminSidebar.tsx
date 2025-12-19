@@ -12,6 +12,7 @@ import {
   UserPen,
   Link2,
   FileStack,
+  Images,
 } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -35,6 +36,7 @@ const menuItems = [
   { title: 'Produk', url: '/admin/products', icon: ShoppingBag },
   { title: 'Artikel', url: '/admin/posts', icon: FileText },
   { title: 'Halaman', url: '/admin/pages', icon: FileStack },
+  { title: 'Galeri', url: '/admin/gallery', icon: Images },
   { title: 'Penulis', url: '/admin/authors', icon: UserPen },
   { title: 'Kategori', url: '/admin/categories', icon: Tag },
   { title: 'Menu & Link', url: '/admin/menu-links', icon: Link2 },
