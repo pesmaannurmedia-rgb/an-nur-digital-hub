@@ -1,6 +1,6 @@
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, MessageSquare, Loader2, BookOpen, Calendar, Building2, FileText, Hash, Globe, BookMarked, ExternalLink, Eye, Layers } from "lucide-react";
+import { ArrowLeft, MessageSquare, Loader2, BookOpen, Calendar, Building2, FileText, Hash, Globe, BookMarked, ExternalLink, Eye, Layers, Tag, Percent } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Helmet } from "react-helmet";
+import { ImageZoomModal } from "@/components/ImageZoomModal";
 
 interface Book {
   id: string;
@@ -30,6 +31,9 @@ interface Book {
   purchase_link: string | null;
   category: string;
   price: number;
+  discount_price: number | null;
+  discount_percentage: number | null;
+  is_on_sale: boolean | null;
   stock: number | null;
   image_url: string | null;
 }
@@ -118,6 +122,18 @@ const ShopSinglePage = () => {
     return book.table_of_contents.split('\n').filter(line => line.trim());
   };
 
+  // Calculate discount percentage if not set
+  const getDiscountPercentage = () => {
+    if (book.discount_percentage) return book.discount_percentage;
+    if (book.discount_price && book.price > 0) {
+      return Math.round(((book.price - book.discount_price) / book.price) * 100);
+    }
+    return 0;
+  };
+
+  const isOnSale = book.is_on_sale && book.discount_price && book.discount_price < book.price;
+  const discountPercent = getDiscountPercentage();
+
   return (
     <MainLayout>
       {/* SEO Meta Tags for Google Scholar */}
@@ -168,13 +184,28 @@ const ShopSinglePage = () => {
             {/* Book Cover - Left Column */}
             <div className="lg:col-span-1">
               <div className="sticky top-24 space-y-4">
-                <div className="rounded-xl overflow-hidden bg-muted shadow-lg">
+                <div className="rounded-xl overflow-hidden bg-muted shadow-lg relative">
+                  {/* Sale Badge */}
+                  {isOnSale && (
+                    <div className="absolute top-3 left-3 z-10">
+                      <Badge className="bg-destructive text-destructive-foreground font-bold text-sm px-3 py-1">
+                        <Percent className="w-3 h-3 mr-1" />
+                        DISKON {discountPercent}%
+                      </Badge>
+                    </div>
+                  )}
+                  
                   {book.image_url ? (
-                    <img 
-                      src={book.image_url} 
-                      alt={`Sampul buku ${book.name}`} 
-                      className="w-full h-auto object-cover"
-                    />
+                    <ImageZoomModal src={book.image_url} alt={`Sampul buku ${book.name}`}>
+                      <img 
+                        src={book.image_url} 
+                        alt={`Sampul buku ${book.name}`} 
+                        className="w-full h-auto object-cover hover:opacity-90 transition-opacity"
+                      />
+                      <div className="absolute bottom-3 right-3 bg-background/80 px-2 py-1 rounded text-xs text-muted-foreground">
+                        Klik untuk zoom
+                      </div>
+                    </ImageZoomModal>
                   ) : (
                     <div className="w-full aspect-[3/4] flex items-center justify-center bg-muted">
                       <BookOpen className="w-24 h-24 text-muted-foreground/50" />
@@ -186,11 +217,26 @@ const ShopSinglePage = () => {
                 <Card>
                   <CardContent className="p-4 space-y-4">
                     <div className="text-center">
-                      <p className="text-3xl font-bold text-primary">
-                        Rp {book.price.toLocaleString('id-ID')}
-                      </p>
+                      {isOnSale ? (
+                        <>
+                          <p className="text-lg text-muted-foreground line-through">
+                            Rp {book.price.toLocaleString('id-ID')}
+                          </p>
+                          <p className="text-3xl font-bold text-destructive">
+                            Rp {book.discount_price?.toLocaleString('id-ID')}
+                          </p>
+                          <Badge variant="secondary" className="mt-2">
+                            <Tag className="w-3 h-3 mr-1" />
+                            Hemat Rp {(book.price - (book.discount_price || 0)).toLocaleString('id-ID')}
+                          </Badge>
+                        </>
+                      ) : (
+                        <p className="text-3xl font-bold text-primary">
+                          Rp {book.price.toLocaleString('id-ID')}
+                        </p>
+                      )}
                       {book.stock !== null && (
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p className="text-sm text-muted-foreground mt-2">
                           {book.stock > 0 ? `Stok: ${book.stock} tersedia` : 'Stok habis'}
                         </p>
                       )}

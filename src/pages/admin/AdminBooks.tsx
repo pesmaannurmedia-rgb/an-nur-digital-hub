@@ -42,7 +42,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Pencil, Trash2, Loader2, BookOpen, ExternalLink, Eye, EyeOff, Copy } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, BookOpen, ExternalLink, Eye, EyeOff, Copy, Percent, Tag } from 'lucide-react';
 import { ImageUpload } from '@/components/admin/ImageUpload';
 import {
   Tooltip,
@@ -82,6 +82,9 @@ const bookSchema = z.object({
   // Kategori & Harga
   category: z.string().min(1, 'Kategori wajib dipilih'),
   price: z.coerce.number().min(0, 'Harga tidak boleh negatif'),
+  discount_price: z.coerce.number().min(0).optional().or(z.literal('')),
+  discount_percentage: z.coerce.number().min(0).max(100).optional().or(z.literal('')),
+  is_on_sale: z.boolean().default(false),
   stock: z.coerce.number().min(0, 'Stok tidak boleh negatif'),
   
   // Media & Status
@@ -112,6 +115,9 @@ interface Book {
   purchase_link: string | null;
   category: string;
   price: number;
+  discount_price: number | null;
+  discount_percentage: number | null;
+  is_on_sale: boolean | null;
   stock: number | null;
   image_url: string | null;
   is_active: boolean | null;
@@ -155,6 +161,9 @@ export default function AdminBooks() {
       purchase_link: '',
       category: '',
       price: 0,
+      discount_price: '',
+      discount_percentage: '',
+      is_on_sale: false,
       stock: 0,
       image_url: '',
       is_active: true,
@@ -233,6 +242,9 @@ export default function AdminBooks() {
       purchase_link: '',
       category: categories[0]?.name || '',
       price: 0,
+      discount_price: '',
+      discount_percentage: '',
+      is_on_sale: false,
       stock: 0,
       image_url: '',
       is_active: true,
@@ -262,6 +274,9 @@ export default function AdminBooks() {
       purchase_link: book.purchase_link || '',
       category: book.category,
       price: book.price,
+      discount_price: book.discount_price || '',
+      discount_percentage: book.discount_percentage || '',
+      is_on_sale: book.is_on_sale ?? false,
       stock: book.stock || 0,
       image_url: book.image_url || '',
       is_active: book.is_active ?? true,
@@ -296,6 +311,9 @@ export default function AdminBooks() {
         purchase_link: values.purchase_link || null,
         category: values.category,
         price: values.price,
+        discount_price: values.discount_price ? Number(values.discount_price) : null,
+        discount_percentage: values.discount_percentage ? Number(values.discount_percentage) : null,
+        is_on_sale: values.is_on_sale,
         stock: values.stock,
         image_url: values.image_url || null,
         is_active: values.is_active,
@@ -781,7 +799,7 @@ export default function AdminBooks() {
                         name="price"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Harga (Rp)</FormLabel>
+                            <FormLabel>Harga Normal (Rp)</FormLabel>
                             <FormControl>
                               <Input type="number" {...field} />
                             </FormControl>
@@ -803,6 +821,60 @@ export default function AdminBooks() {
                           </FormItem>
                         )}
                       />
+                    </div>
+
+                    {/* Discount Section */}
+                    <div className="rounded-lg border p-4 space-y-4 bg-muted/30">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Tag className="h-4 w-4 text-primary" />
+                          <h4 className="font-medium">Pengaturan Diskon/Promo</h4>
+                        </div>
+                        <FormField
+                          control={form.control}
+                          name="is_on_sale"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center gap-2 space-y-0">
+                              <FormLabel className="text-sm text-muted-foreground">Aktifkan Promo</FormLabel>
+                              <FormControl>
+                                <Switch checked={field.value} onCheckedChange={field.onChange} />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="discount_price"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Harga Diskon (Rp)</FormLabel>
+                              <FormDescription>Harga setelah diskon</FormDescription>
+                              <FormControl>
+                                <Input type="number" placeholder="0" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="discount_percentage"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Persentase Diskon (%)</FormLabel>
+                              <FormDescription>Akan dihitung otomatis jika kosong</FormDescription>
+                              <FormControl>
+                                <Input type="number" placeholder="0" min="0" max="100" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                     </div>
                   </div>
 
