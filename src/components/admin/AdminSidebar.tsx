@@ -8,7 +8,7 @@ import {
   Users,
   LogOut,
   BookOpen,
-  Menu,
+  Tag,
 } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,7 @@ const menuItems = [
   { title: 'Dashboard', url: '/admin', icon: LayoutDashboard },
   { title: 'Produk', url: '/admin/products', icon: ShoppingBag },
   { title: 'Artikel', url: '/admin/posts', icon: FileText },
+  { title: 'Kategori', url: '/admin/categories', icon: Tag },
   { title: 'Pengumuman', url: '/admin/announcements', icon: Bell },
   { title: 'Pesan Masuk', url: '/admin/messages', icon: MessageSquare },
   { title: 'Kelola Admin', url: '/admin/users', icon: Users },

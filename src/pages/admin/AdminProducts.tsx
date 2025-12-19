@@ -49,7 +49,7 @@ const productSchema = z.object({
   price: z.coerce.number().min(0, 'Harga tidak boleh negatif'),
   category: z.string().min(1, 'Kategori wajib dipilih'),
   description: z.string().optional(),
-  image_url: z.string().url('URL gambar tidak valid').optional().or(z.literal('')),
+  image_url: z.string().optional().or(z.literal('')),
   stock: z.coerce.number().min(0, 'Stok tidak boleh negatif'),
   is_active: z.boolean(),
 });
@@ -69,10 +69,15 @@ interface Product {
   created_at: string;
 }
 
-const categories = ['Buku', 'Merchandise', 'Makanan', 'Lainnya'];
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+}
 
 export default function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -85,7 +90,7 @@ export default function AdminProducts() {
       name: '',
       slug: '',
       price: 0,
-      category: 'Lainnya',
+      category: '',
       description: '',
       image_url: '',
       stock: 0,
@@ -95,7 +100,23 @@ export default function AdminProducts() {
 
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('type', 'product')
+        .order('name');
+
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
 
   const fetchProducts = async () => {
     try {
@@ -133,7 +154,7 @@ export default function AdminProducts() {
       name: '',
       slug: '',
       price: 0,
-      category: 'Lainnya',
+      category: categories[0]?.name || '',
       description: '',
       image_url: '',
       stock: 0,
@@ -323,16 +344,16 @@ export default function AdminProducts() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Kategori</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue />
+                            <SelectValue placeholder="Pilih kategori" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           {categories.map((cat) => (
-                            <SelectItem key={cat} value={cat}>
-                              {cat}
+                            <SelectItem key={cat.id} value={cat.name}>
+                              {cat.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
