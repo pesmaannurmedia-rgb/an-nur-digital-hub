@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ChevronDown } from "lucide-react";
-import { IslamicPattern } from "@/components/ui/IslamicPattern";
 import heroBg from "@/assets/hero-bg.jpg";
 
 export function HeroSection() {
@@ -20,11 +19,6 @@ export function HeroSection() {
         style={{ backgroundImage: `url(${heroBg})` }}
       >
         <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background dark:from-background/90 dark:via-background/70 dark:to-background" />
-      </div>
-
-      {/* Islamic Pattern Overlay */}
-      <div className="absolute inset-0 pointer-events-none">
-        <IslamicPattern className="w-full h-full text-secondary" size={100} />
       </div>
 
       {/* Content */}
