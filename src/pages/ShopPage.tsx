@@ -1,10 +1,17 @@
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Search, ShoppingBag, Loader2, Percent, X, Filter } from "lucide-react";
+import { Search, ShoppingBag, Loader2, Percent, X, Filter, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Product {
@@ -17,6 +24,7 @@ interface Product {
   is_on_sale: boolean | null;
   category: string;
   image_url: string | null;
+  publish_year: number | null;
 }
 
 interface Category {
@@ -25,12 +33,15 @@ interface Category {
   slug: string;
 }
 
+type SortOption = 'newest' | 'oldest' | 'price-low' | 'price-high' | 'name-asc' | 'name-desc' | 'year-new' | 'year-old';
+
 const ShopPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
 
   useEffect(() => {
     fetchProducts();
@@ -41,7 +52,7 @@ const ShopPage = () => {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('id, slug, name, price, discount_price, discount_percentage, is_on_sale, category, image_url')
+        .select('id, slug, name, price, discount_price, discount_percentage, is_on_sale, category, image_url, publish_year')
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
@@ -77,6 +88,13 @@ const ShopPage = () => {
     return 0;
   };
 
+  const getEffectivePrice = (product: Product) => {
+    if (product.is_on_sale && product.discount_price) {
+      return product.discount_price;
+    }
+    return product.price;
+  };
+
   const toggleCategory = (categoryName: string) => {
     setSelectedCategories(prev => 
       prev.includes(categoryName)
@@ -88,16 +106,50 @@ const ShopPage = () => {
   const clearFilters = () => {
     setSelectedCategories([]);
     setSearch("");
+    setSortBy('newest');
   };
 
-  const filtered = products.filter(p => {
-    const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.category.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(p.category);
-    return matchesSearch && matchesCategory;
-  });
+  const sortedAndFiltered = useMemo(() => {
+    // First filter
+    let result = products.filter(p => {
+      const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
+        p.category.toLowerCase().includes(search.toLowerCase());
+      const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(p.category);
+      return matchesSearch && matchesCategory;
+    });
 
-  const hasActiveFilters = selectedCategories.length > 0 || search.length > 0;
+    // Then sort
+    switch (sortBy) {
+      case 'newest':
+        // Already sorted by created_at desc from query
+        break;
+      case 'oldest':
+        result = [...result].reverse();
+        break;
+      case 'price-low':
+        result = [...result].sort((a, b) => getEffectivePrice(a) - getEffectivePrice(b));
+        break;
+      case 'price-high':
+        result = [...result].sort((a, b) => getEffectivePrice(b) - getEffectivePrice(a));
+        break;
+      case 'name-asc':
+        result = [...result].sort((a, b) => a.name.localeCompare(b.name, 'id'));
+        break;
+      case 'name-desc':
+        result = [...result].sort((a, b) => b.name.localeCompare(a.name, 'id'));
+        break;
+      case 'year-new':
+        result = [...result].sort((a, b) => (b.publish_year || 0) - (a.publish_year || 0));
+        break;
+      case 'year-old':
+        result = [...result].sort((a, b) => (a.publish_year || 0) - (b.publish_year || 0));
+        break;
+    }
+
+    return result;
+  }, [products, search, selectedCategories, sortBy]);
+
+  const hasActiveFilters = selectedCategories.length > 0 || search.length > 0 || sortBy !== 'newest';
 
   return (
     <MainLayout>
@@ -110,14 +162,42 @@ const ShopPage = () => {
 
           {/* Search & Filter Section */}
           <div className="max-w-4xl mx-auto mb-8 space-y-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input 
-                placeholder="Cari produk..." 
-                className="pl-10" 
-                value={search} 
-                onChange={e => setSearch(e.target.value)} 
-              />
+            <div className="flex gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input 
+                  placeholder="Cari produk..." 
+                  className="pl-10" 
+                  value={search} 
+                  onChange={e => setSearch(e.target.value)} 
+                />
+              </div>
+              
+              {/* Sort Dropdown */}
+              <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
+                <SelectTrigger className="w-[200px]">
+                  <ArrowUpDown className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder="Urutkan" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">Terbaru</SelectItem>
+                  <SelectItem value="oldest">Terlama</SelectItem>
+                  <SelectItem value="price-low">
+                    <span className="flex items-center gap-1">
+                      Harga <ArrowUp className="w-3 h-3" /> Terendah
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="price-high">
+                    <span className="flex items-center gap-1">
+                      Harga <ArrowDown className="w-3 h-3" /> Tertinggi
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="name-asc">Nama A-Z</SelectItem>
+                  <SelectItem value="name-desc">Nama Z-A</SelectItem>
+                  <SelectItem value="year-new">Tahun Terbaru</SelectItem>
+                  <SelectItem value="year-old">Tahun Terlama</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Category Filter */}
@@ -144,11 +224,11 @@ const ShopPage = () => {
               {hasActiveFilters && (
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-muted-foreground">
-                    Menampilkan {filtered.length} dari {products.length} produk
+                    Menampilkan {sortedAndFiltered.length} dari {products.length} produk
                   </span>
                   <Button variant="ghost" size="sm" onClick={clearFilters} className="h-7 text-xs">
                     <X className="w-3 h-3 mr-1" />
-                    Hapus Filter
+                    Reset
                   </Button>
                 </div>
               )}
@@ -159,7 +239,7 @@ const ShopPage = () => {
             <div className="flex justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
-          ) : filtered.length === 0 ? (
+          ) : sortedAndFiltered.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <p>{hasActiveFilters ? 'Tidak ada produk yang sesuai filter' : 'Belum ada produk tersedia'}</p>
               {hasActiveFilters && (
@@ -170,7 +250,7 @@ const ShopPage = () => {
             </div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {filtered.map(product => {
+              {sortedAndFiltered.map(product => {
                 const isOnSale = product.is_on_sale && product.discount_price && product.discount_price < product.price;
                 const discountPercent = getDiscountPercentage(product);
                 
