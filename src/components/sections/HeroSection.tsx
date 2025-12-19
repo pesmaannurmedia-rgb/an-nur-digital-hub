@@ -24,7 +24,7 @@ export function HeroSection() {
 
       {/* Islamic Pattern Overlay */}
       <div className="absolute inset-0 pointer-events-none">
-        <IslamicPattern className="w-full h-full text-primary opacity-60 dark:opacity-40" />
+        <IslamicPattern className="w-full h-full text-secondary" size={100} />
       </div>
 
       {/* Content */}

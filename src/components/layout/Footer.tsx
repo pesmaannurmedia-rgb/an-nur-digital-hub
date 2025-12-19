@@ -23,7 +23,7 @@ export function Footer() {
     <footer className="relative bg-primary overflow-hidden">
       {/* Islamic Pattern Background */}
       <div className="absolute inset-0 pointer-events-none">
-        <IslamicPattern className="w-full h-full text-primary-foreground opacity-10" />
+        <IslamicPattern className="w-full h-full text-secondary/40" size={120} />
       </div>
 
       <div className="relative container-section py-12 md:py-16">
