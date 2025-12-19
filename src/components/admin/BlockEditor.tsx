@@ -15,7 +15,9 @@ import {
   Quote,
   List,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  Images,
+  X
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -25,7 +27,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ImageUpload } from './ImageUpload';
 
-export type BlockType = 'text' | 'heading' | 'image' | 'video' | 'embed' | 'quote' | 'list';
+export type BlockType = 'text' | 'heading' | 'image' | 'gallery' | 'video' | 'embed' | 'quote' | 'list';
 
 export interface Block {
   id: string;
@@ -43,6 +45,7 @@ const blockTypeConfig = {
   text: { icon: Type, label: 'Teks' },
   heading: { icon: Heading1, label: 'Heading' },
   image: { icon: Image, label: 'Gambar' },
+  gallery: { icon: Images, label: 'Galeri Foto' },
   video: { icon: Video, label: 'Video' },
   embed: { icon: Code, label: 'Embed' },
   quote: { icon: Quote, label: 'Kutipan' },
@@ -68,6 +71,8 @@ export function BlockEditor({ blocks, onChange }: BlockEditorProps) {
         return { text: '', level: 2 };
       case 'image':
         return { url: '', alt: '', caption: '' };
+      case 'gallery':
+        return { images: [], columns: 3, caption: '' };
       case 'video':
         return { url: '', caption: '' };
       case 'embed':
@@ -252,6 +257,11 @@ function BlockContent({ block, onChange }: BlockContentProps) {
         </div>
       );
 
+    case 'gallery':
+      return (
+        <GalleryBlockEditor content={content} onChange={onChange} />
+      );
+
     case 'video':
       return (
         <div className="space-y-3">
@@ -374,6 +384,103 @@ function ListBlockEditor({ content, onChange }: ListBlockEditorProps) {
         <Plus className="mr-2 h-4 w-4" />
         Tambah Item
       </Button>
+    </div>
+  );
+}
+
+interface GalleryImage {
+  url: string;
+  alt: string;
+  caption?: string;
+}
+
+interface GalleryBlockEditorProps {
+  content: Record<string, any>;
+  onChange: (content: Record<string, any>) => void;
+}
+
+function GalleryBlockEditor({ content, onChange }: GalleryBlockEditorProps) {
+  const images: GalleryImage[] = content.images || [];
+  const columns = content.columns || 3;
+
+  const addImage = (url: string) => {
+    const newImages = [...images, { url, alt: '', caption: '' }];
+    onChange({ ...content, images: newImages });
+  };
+
+  const updateImage = (index: number, field: keyof GalleryImage, value: string) => {
+    const newImages = [...images];
+    newImages[index] = { ...newImages[index], [field]: value };
+    onChange({ ...content, images: newImages });
+  };
+
+  const removeImage = (index: number) => {
+    const newImages = images.filter((_, i) => i !== index);
+    onChange({ ...content, images: newImages });
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Column selector */}
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground">Kolom:</span>
+        {[2, 3, 4].map((col) => (
+          <Button
+            key={col}
+            type="button"
+            variant={columns === col ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onChange({ ...content, columns: col })}
+          >
+            {col}
+          </Button>
+        ))}
+      </div>
+
+      {/* Images grid */}
+      {images.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {images.map((image, index) => (
+            <div key={index} className="relative group">
+              <img
+                src={image.url}
+                alt={image.alt || `Gambar ${index + 1}`}
+                className="w-full h-24 object-cover rounded-lg border border-border"
+              />
+              <Button
+                type="button"
+                variant="destructive"
+                size="icon"
+                className="absolute -top-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() => removeImage(index)}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+              <Input
+                placeholder="Alt text"
+                value={image.alt}
+                onChange={(e) => updateImage(index, 'alt', e.target.value)}
+                className="mt-1 text-xs h-7"
+              />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add image */}
+      <ImageUpload
+        value=""
+        onChange={addImage}
+        bucket="post-images"
+        folder="gallery"
+      />
+
+      {/* Caption for entire gallery */}
+      <Input
+        placeholder="Caption galeri (opsional)"
+        value={content.caption || ''}
+        onChange={(e) => onChange({ ...content, caption: e.target.value })}
+      />
     </div>
   );
 }
