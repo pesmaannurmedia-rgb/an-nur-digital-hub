@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -41,6 +41,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
+import { ImageUpload } from '@/components/admin/ImageUpload';
 
 const productSchema = z.object({
   name: z.string().min(1, 'Nama produk wajib diisi'),
@@ -346,9 +347,13 @@ export default function AdminProducts() {
                   name="image_url"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>URL Gambar</FormLabel>
+                      <FormLabel>Gambar Produk</FormLabel>
                       <FormControl>
-                        <Input placeholder="https://..." {...field} />
+                        <ImageUpload
+                          value={field.value}
+                          onChange={field.onChange}
+                          bucket="product-images"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
