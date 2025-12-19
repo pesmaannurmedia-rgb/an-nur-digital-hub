@@ -361,40 +361,70 @@ export type Database = {
       }
       products: {
         Row: {
+          abstract: string | null
+          author: string | null
           category: string
           created_at: string
           description: string | null
+          doi: string | null
+          edition: string | null
           id: string
           image_url: string | null
           is_active: boolean | null
+          isbn: string | null
+          keywords: string[] | null
+          language: string | null
           name: string
+          pages: number | null
           price: number
+          publish_year: number | null
+          publisher: string | null
           slug: string
           stock: number | null
           updated_at: string
         }
         Insert: {
+          abstract?: string | null
+          author?: string | null
           category?: string
           created_at?: string
           description?: string | null
+          doi?: string | null
+          edition?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          isbn?: string | null
+          keywords?: string[] | null
+          language?: string | null
           name: string
+          pages?: number | null
           price?: number
+          publish_year?: number | null
+          publisher?: string | null
           slug: string
           stock?: number | null
           updated_at?: string
         }
         Update: {
+          abstract?: string | null
+          author?: string | null
           category?: string
           created_at?: string
           description?: string | null
+          doi?: string | null
+          edition?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          isbn?: string | null
+          keywords?: string[] | null
+          language?: string | null
           name?: string
+          pages?: number | null
           price?: number
+          publish_year?: number | null
+          publisher?: string | null
           slug?: string
           stock?: number | null
           updated_at?: string

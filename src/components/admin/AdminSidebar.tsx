@@ -1,7 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
-  ShoppingBag,
   FileText,
   Bell,
   MessageSquare,
@@ -33,7 +32,7 @@ import { cn } from '@/lib/utils';
 
 const menuItems = [
   { title: 'Dashboard', url: '/admin', icon: LayoutDashboard },
-  { title: 'Produk', url: '/admin/products', icon: ShoppingBag },
+  { title: 'Katalog Buku', url: '/admin/products', icon: BookOpen },
   { title: 'Artikel', url: '/admin/posts', icon: FileText },
   { title: 'Halaman', url: '/admin/pages', icon: FileStack },
   { title: 'Galeri', url: '/admin/gallery', icon: Images },
