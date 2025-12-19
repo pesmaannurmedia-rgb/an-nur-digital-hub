@@ -115,23 +115,25 @@ const BlogSinglePage = () => {
     <MainLayout>
       <article className="py-16">
         <div className="container-section max-w-4xl">
-          <Button variant="ghost" asChild className="mb-8">
+          <Button variant="ghost" asChild className="mb-6">
             <Link to="/blog"><ArrowLeft className="w-4 h-4 mr-2" />Kembali ke Blog</Link>
           </Button>
           
+          {/* Featured Image */}
+          {post.image_url && (
+            <div className="aspect-video overflow-hidden rounded-xl mb-8">
+              <img src={post.image_url} alt={post.title} className="w-full h-full object-cover" />
+            </div>
+          )}
+
           <header className="mb-8">
             <span className="text-sm font-medium text-primary bg-primary/10 px-3 py-1 rounded-full">{post.category}</span>
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mt-4 mb-4">{post.title}</h1>
-            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1"><Calendar className="w-4 h-4" />{formatDate(post.published_at)}</span>
-              <span className="flex items-center gap-1"><User className="w-4 h-4" />{post.author}</span>
-              <span className="flex items-center gap-1"><Tag className="w-4 h-4" />{post.category}</span>
+            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground border-b border-border pb-6">
+              <span className="flex items-center gap-2"><Calendar className="w-4 h-4" />{formatDate(post.published_at)}</span>
+              <span className="flex items-center gap-2"><User className="w-4 h-4" />{post.author}</span>
             </div>
           </header>
-
-          {post.image_url && (
-            <img src={post.image_url} alt={post.title} className="w-full rounded-xl mb-8" />
-          )}
 
           <div className="prose prose-lg max-w-none dark:prose-invert">
             {post.content ? (
