@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Phone, Mail, MapPin, Instagram, Youtube, Facebook } from "lucide-react";
-import { IslamicPattern } from "@/components/ui/IslamicPattern";
+
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -21,11 +21,6 @@ export function Footer() {
 
   return (
     <footer className="relative bg-primary overflow-hidden">
-      {/* Islamic Pattern Background */}
-      <div className="absolute inset-0 pointer-events-none">
-        <IslamicPattern className="w-full h-full text-secondary/40" size={120} />
-      </div>
-
       <div className="relative container-section py-12 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand */}
