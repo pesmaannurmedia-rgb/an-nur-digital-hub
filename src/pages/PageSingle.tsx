@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { MainLayout } from '@/components/layout/MainLayout';
+import { Badge } from '@/components/ui/badge';
 
 interface Page {
   id: string;
@@ -9,6 +10,7 @@ interface Page {
   slug: string;
   meta_description: string | null;
   featured_image: string | null;
+  is_published: boolean;
 }
 
 interface PageBlock {
@@ -20,6 +22,9 @@ interface PageBlock {
 
 export default function PageSingle() {
   const { slug } = useParams<{ slug: string }>();
+  const [searchParams] = useSearchParams();
+  const isPreviewMode = searchParams.get('preview') === 'true';
+  
   const [page, setPage] = useState<Page | null>(null);
   const [blocks, setBlocks] = useState<PageBlock[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,12 +33,18 @@ export default function PageSingle() {
   useEffect(() => {
     const fetchPage = async () => {
       try {
-        const { data: pageData, error: pageError } = await supabase
+        // Build query - for preview mode, don't filter by is_published
+        let query = supabase
           .from('pages')
           .select('*')
-          .eq('slug', slug)
-          .eq('is_published', true)
-          .maybeSingle();
+          .eq('slug', slug);
+        
+        // Only filter by is_published if not in preview mode
+        if (!isPreviewMode) {
+          query = query.eq('is_published', true);
+        }
+
+        const { data: pageData, error: pageError } = await query.maybeSingle();
 
         if (pageError) throw pageError;
         
@@ -68,7 +79,7 @@ export default function PageSingle() {
     if (slug) {
       fetchPage();
     }
-  }, [slug]);
+  }, [slug, isPreviewMode]);
 
   if (loading) {
     return (
@@ -97,6 +108,14 @@ export default function PageSingle() {
 
   return (
     <MainLayout>
+      {/* Preview Mode Banner */}
+      {isPreviewMode && !page.is_published && (
+        <div className="bg-amber-500/90 text-amber-950 py-2 px-4 text-center text-sm font-medium">
+          <Badge variant="outline" className="mr-2 border-amber-950 text-amber-950">PREVIEW</Badge>
+          Anda sedang melihat preview halaman draft. Halaman ini belum dipublikasikan.
+        </div>
+      )}
+
       {/* SEO Meta */}
       {page.meta_description && (
         <meta name="description" content={page.meta_description} />
