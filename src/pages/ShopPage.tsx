@@ -1,5 +1,5 @@
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Search, ShoppingBag, Loader2, Percent, X, Filter, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Search, ShoppingBag, Loader2, Percent, X, Filter, ArrowUpDown, ArrowUp, ArrowDown, BookOpen, Package } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "react-router-dom";
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,6 +26,7 @@ interface Product {
   category: string;
   image_url: string | null;
   publish_year: number | null;
+  product_type: string;
 }
 
 interface Category {
@@ -34,6 +36,7 @@ interface Category {
 }
 
 type SortOption = 'newest' | 'oldest' | 'price-low' | 'price-high' | 'name-asc' | 'name-desc' | 'year-new' | 'year-old';
+type ProductTypeFilter = 'all' | 'book' | 'general';
 
 const ShopPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -42,6 +45,7 @@ const ShopPage = () => {
   const [search, setSearch] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<SortOption>('newest');
+  const [productType, setProductType] = useState<ProductTypeFilter>('all');
 
   useEffect(() => {
     fetchProducts();
@@ -52,7 +56,7 @@ const ShopPage = () => {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('id, slug, name, price, discount_price, discount_percentage, is_on_sale, category, image_url, publish_year')
+        .select('id, slug, name, price, discount_price, discount_percentage, is_on_sale, category, image_url, publish_year, product_type')
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
@@ -107,7 +111,15 @@ const ShopPage = () => {
     setSelectedCategories([]);
     setSearch("");
     setSortBy('newest');
+    setProductType('all');
   };
+
+  // Count products by type
+  const productCounts = useMemo(() => {
+    const books = products.filter(p => p.product_type === 'book').length;
+    const general = products.filter(p => p.product_type === 'general').length;
+    return { books, general, all: products.length };
+  }, [products]);
 
   const sortedAndFiltered = useMemo(() => {
     // First filter
@@ -115,7 +127,8 @@ const ShopPage = () => {
       const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
         p.category.toLowerCase().includes(search.toLowerCase());
       const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(p.category);
-      return matchesSearch && matchesCategory;
+      const matchesType = productType === 'all' || p.product_type === productType;
+      return matchesSearch && matchesCategory && matchesType;
     });
 
     // Then sort
@@ -147,9 +160,9 @@ const ShopPage = () => {
     }
 
     return result;
-  }, [products, search, selectedCategories, sortBy]);
+  }, [products, search, selectedCategories, sortBy, productType]);
 
-  const hasActiveFilters = selectedCategories.length > 0 || search.length > 0 || sortBy !== 'newest';
+  const hasActiveFilters = selectedCategories.length > 0 || search.length > 0 || sortBy !== 'newest' || productType !== 'all';
 
   return (
     <MainLayout>
@@ -158,6 +171,26 @@ const ShopPage = () => {
           <div className="text-center mb-12">
             <h1 className="section-title">Toko An-Nur</h1>
             <p className="section-subtitle">Buku, merchandise, dan produk resmi Pesantren An-Nur</p>
+          </div>
+
+          {/* Product Type Tabs */}
+          <div className="max-w-4xl mx-auto mb-6">
+            <Tabs value={productType} onValueChange={(v) => setProductType(v as ProductTypeFilter)} className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="all" className="flex items-center gap-2">
+                  <ShoppingBag className="w-4 h-4" />
+                  Semua ({productCounts.all})
+                </TabsTrigger>
+                <TabsTrigger value="book" className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4" />
+                  Buku ({productCounts.books})
+                </TabsTrigger>
+                <TabsTrigger value="general" className="flex items-center gap-2">
+                  <Package className="w-4 h-4" />
+                  Produk Lain ({productCounts.general})
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
 
           {/* Search & Filter Section */}
@@ -194,8 +227,12 @@ const ShopPage = () => {
                   </SelectItem>
                   <SelectItem value="name-asc">Nama A-Z</SelectItem>
                   <SelectItem value="name-desc">Nama Z-A</SelectItem>
-                  <SelectItem value="year-new">Tahun Terbaru</SelectItem>
-                  <SelectItem value="year-old">Tahun Terlama</SelectItem>
+                  {productType !== 'general' && (
+                    <>
+                      <SelectItem value="year-new">Tahun Terbaru</SelectItem>
+                      <SelectItem value="year-old">Tahun Terlama</SelectItem>
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </div>

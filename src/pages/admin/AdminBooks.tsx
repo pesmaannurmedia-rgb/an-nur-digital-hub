@@ -195,6 +195,7 @@ export default function AdminBooks() {
       const { data, error } = await supabase
         .from('products')
         .select('*')
+        .eq('product_type', 'book')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -317,6 +318,7 @@ export default function AdminBooks() {
         stock: values.stock,
         image_url: values.image_url || null,
         is_active: values.is_active,
+        product_type: 'book',
       };
 
       if (editingBook) {
