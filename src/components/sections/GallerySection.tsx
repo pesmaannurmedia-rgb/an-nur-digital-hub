@@ -1,17 +1,54 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
-const galleryImages = [
-  { id: 1, src: "https://images.unsplash.com/photo-1584286595398-a59511e0649f?w=600&q=80", alt: "Kajian rutin santri" },
-  { id: 2, src: "https://images.unsplash.com/photo-1609599006353-e629aaabfeae?w=600&q=80", alt: "Sholat berjamaah" },
-  { id: 3, src: "https://images.unsplash.com/photo-1585036156171-384164a8c675?w=600&q=80", alt: "Belajar Al-Quran" },
-  { id: 4, src: "https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=600&q=80", alt: "Kegiatan outdoor" },
-  { id: 5, src: "https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=600&q=80", alt: "Wisuda tahfidz" },
-  { id: 6, src: "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=600&q=80", alt: "Diskusi bersama" },
-];
+interface GalleryItem {
+  id: string;
+  title: string;
+  description: string | null;
+  image_url: string;
+}
 
 export function GallerySection() {
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [galleryImages, setGalleryImages] = useState<GalleryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState<GalleryItem | null>(null);
+
+  useEffect(() => {
+    const fetchGallery = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('gallery')
+          .select('*')
+          .eq('is_active', true)
+          .order('position', { ascending: true });
+
+        if (error) throw error;
+        setGalleryImages(data || []);
+      } catch (error) {
+        console.error('Error fetching gallery:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchGallery();
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="py-20 bg-surface">
+        <div className="container-section flex justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </section>
+    );
+  }
+
+  if (galleryImages.length === 0) {
+    return null;
+  }
 
   return (
     <section className="py-20 bg-surface">
@@ -32,13 +69,13 @@ export function GallerySection() {
           {galleryImages.map((image, index) => (
             <button
               key={image.id}
-              onClick={() => setSelectedImage(image.src)}
+              onClick={() => setSelectedImage(image)}
               className="group relative aspect-square overflow-hidden rounded-xl bg-muted focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <img
-                src={image.src}
-                alt={image.alt}
+                src={image.image_url}
+                alt={image.title}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 loading="lazy"
               />
@@ -49,6 +86,10 @@ export function GallerySection() {
                   </svg>
                 </div>
               </div>
+              {/* Title overlay on hover */}
+              <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                <p className="text-white text-sm font-medium truncate">{image.title}</p>
+              </div>
             </button>
           ))}
         </div>
@@ -57,11 +98,19 @@ export function GallerySection() {
         <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
           <DialogContent className="max-w-4xl p-0 overflow-hidden">
             {selectedImage && (
-              <img
-                src={selectedImage.replace("w=600", "w=1200")}
-                alt="Gallery image"
-                className="w-full h-auto"
-              />
+              <div>
+                <img
+                  src={selectedImage.image_url}
+                  alt={selectedImage.title}
+                  className="w-full h-auto"
+                />
+                <div className="p-4 bg-background">
+                  <h3 className="font-semibold text-lg">{selectedImage.title}</h3>
+                  {selectedImage.description && (
+                    <p className="text-muted-foreground mt-1">{selectedImage.description}</p>
+                  )}
+                </div>
+              </div>
             )}
           </DialogContent>
         </Dialog>

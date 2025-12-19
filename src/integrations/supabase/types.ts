@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           content: string | null
           created_at: string
+          icon: string | null
           id: string
           is_active: boolean | null
           link: string | null
@@ -28,6 +29,7 @@ export type Database = {
         Insert: {
           content?: string | null
           created_at?: string
+          icon?: string | null
           id?: string
           is_active?: boolean | null
           link?: string | null
@@ -38,6 +40,7 @@ export type Database = {
         Update: {
           content?: string | null
           created_at?: string
+          icon?: string | null
           id?: string
           is_active?: boolean | null
           link?: string | null
@@ -134,6 +137,39 @@ export type Database = {
           message?: string
           name?: string
           phone?: string | null
+        }
+        Relationships: []
+      }
+      gallery: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string
+          is_active: boolean | null
+          position: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url: string
+          is_active?: boolean | null
+          position?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string
+          is_active?: boolean | null
+          position?: number | null
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }

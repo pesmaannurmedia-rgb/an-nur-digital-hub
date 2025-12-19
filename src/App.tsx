@@ -24,6 +24,7 @@ import AdminCategories from "./pages/admin/AdminCategories";
 import AdminAuthors from "./pages/admin/AdminAuthors";
 import AdminMenuLinks from "./pages/admin/AdminMenuLinks";
 import AdminPages from "./pages/admin/AdminPages";
+import AdminGallery from "./pages/admin/AdminGallery";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +55,7 @@ const App = () => (
                 <Route path="authors" element={<AdminAuthors />} />
                 <Route path="menu-links" element={<AdminMenuLinks />} />
                 <Route path="pages" element={<AdminPages />} />
+                <Route path="gallery" element={<AdminGallery />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
