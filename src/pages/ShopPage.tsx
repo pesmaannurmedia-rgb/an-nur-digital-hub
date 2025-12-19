@@ -70,25 +70,27 @@ const ShopPage = () => {
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {filtered.map(product => (
-                <article key={product.id} className="group bg-card border border-border rounded-xl overflow-hidden hover:shadow-card-hover transition-all">
-                  <div className="aspect-square overflow-hidden bg-muted">
-                    {product.image_url ? (
-                      <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <ShoppingBag className="w-12 h-12 text-muted-foreground/50" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded">{product.category}</span>
-                    <h2 className="font-semibold text-foreground mt-2 mb-1">{product.name}</h2>
-                    <p className="text-lg font-bold text-primary mb-3">Rp {product.price.toLocaleString('id-ID')}</p>
-                    <Button size="sm" className="w-full" asChild>
-                      <Link to={`/shop/${product.slug}`}><ShoppingBag className="w-4 h-4 mr-2" />Lihat Detail</Link>
-                    </Button>
-                  </div>
-                </article>
+                <Link to={`/shop/${product.slug}`} key={product.id} className="block">
+                  <article className="group bg-card border border-border rounded-xl overflow-hidden hover:shadow-card-hover transition-all cursor-pointer h-full">
+                    <div className="aspect-square overflow-hidden bg-muted">
+                      {product.image_url ? (
+                        <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <ShoppingBag className="w-12 h-12 text-muted-foreground/50" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded">{product.category}</span>
+                      <h2 className="font-semibold text-foreground mt-2 mb-1 group-hover:text-primary transition-colors">{product.name}</h2>
+                      <p className="text-lg font-bold text-primary mb-3">Rp {product.price.toLocaleString('id-ID')}</p>
+                      <Button size="sm" className="w-full">
+                        <ShoppingBag className="w-4 h-4 mr-2" />Lihat Detail
+                      </Button>
+                    </div>
+                  </article>
+                </Link>
               ))}
             </div>
           )}

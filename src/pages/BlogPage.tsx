@@ -78,29 +78,31 @@ const BlogPage = () => {
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {filtered.map(post => (
-                <article key={post.id} className="group bg-card border border-border rounded-xl overflow-hidden hover:shadow-card-hover transition-all">
-                  <div className="aspect-video overflow-hidden bg-muted">
-                    {post.image_url ? (
-                      <img src={post.image_url} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <FileText className="w-12 h-12 text-muted-foreground/50" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-5">
-                    <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded">{post.category}</span>
-                    <h2 className="font-semibold text-foreground mt-3 mb-2 group-hover:text-primary transition-colors">{post.title}</h2>
-                    <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{post.excerpt || 'Klik untuk membaca artikel lengkap...'}</p>
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <div className="flex items-center gap-3">
-                        <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{formatDate(post.published_at)}</span>
-                        <span className="flex items-center gap-1"><User className="w-3 h-3" />{post.author}</span>
-                      </div>
-                      <Link to={`/blog/${post.slug}`} className="text-primary hover:underline flex items-center gap-1">Baca <ArrowRight className="w-3 h-3" /></Link>
+                <Link to={`/blog/${post.slug}`} key={post.id} className="block">
+                  <article className="group bg-card border border-border rounded-xl overflow-hidden hover:shadow-card-hover transition-all cursor-pointer h-full">
+                    <div className="aspect-video overflow-hidden bg-muted">
+                      {post.image_url ? (
+                        <img src={post.image_url} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <FileText className="w-12 h-12 text-muted-foreground/50" />
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </article>
+                    <div className="p-5">
+                      <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded">{post.category}</span>
+                      <h2 className="font-semibold text-foreground mt-3 mb-2 group-hover:text-primary transition-colors">{post.title}</h2>
+                      <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{post.excerpt || 'Klik untuk membaca artikel lengkap...'}</p>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <div className="flex items-center gap-3">
+                          <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{formatDate(post.published_at)}</span>
+                          <span className="flex items-center gap-1"><User className="w-3 h-3" />{post.author}</span>
+                        </div>
+                        <span className="text-primary flex items-center gap-1">Baca <ArrowRight className="w-3 h-3" /></span>
+                      </div>
+                    </div>
+                  </article>
+                </Link>
               ))}
             </div>
           )}
