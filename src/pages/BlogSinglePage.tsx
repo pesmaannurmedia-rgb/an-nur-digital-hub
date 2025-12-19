@@ -1,7 +1,8 @@
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Link, useParams } from "react-router-dom";
-import { Calendar, User, Tag, ArrowLeft, Loader2, FileText } from "lucide-react";
+import { Calendar, ArrowLeft, Loader2, FileText, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -19,6 +20,12 @@ interface Post {
   published_at: string | null;
 }
 
+interface Author {
+  name: string;
+  image_url: string | null;
+  bio: string | null;
+}
+
 interface RelatedPost {
   id: string;
   title: string;
@@ -28,6 +35,7 @@ interface RelatedPost {
 const BlogSinglePage = () => {
   const { slug } = useParams();
   const [post, setPost] = useState<Post | null>(null);
+  const [author, setAuthor] = useState<Author | null>(null);
   const [relatedPosts, setRelatedPosts] = useState<RelatedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -54,12 +62,30 @@ const BlogSinglePage = () => {
       } else {
         setPost(data);
         fetchRelatedPosts(data.id, data.category);
+        fetchAuthor(data.author);
       }
     } catch (error) {
       console.error('Error fetching post:', error);
       setNotFound(true);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAuthor = async (authorName: string) => {
+    try {
+      const { data } = await supabase
+        .from('authors')
+        .select('name, image_url, bio')
+        .eq('name', authorName)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (data) {
+        setAuthor(data);
+      }
+    } catch (error) {
+      console.error('Error fetching author:', error);
     }
   };
 
@@ -82,6 +108,10 @@ const BlogSinglePage = () => {
   const formatDate = (dateString: string | null) => {
     if (!dateString) return '';
     return format(new Date(dateString), 'd MMMM yyyy', { locale: id });
+  };
+
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
   if (loading) {
@@ -131,7 +161,13 @@ const BlogSinglePage = () => {
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mt-4 mb-4">{post.title}</h1>
             <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground border-b border-border pb-6">
               <span className="flex items-center gap-2"><Calendar className="w-4 h-4" />{formatDate(post.published_at)}</span>
-              <span className="flex items-center gap-2"><User className="w-4 h-4" />{post.author}</span>
+              <span className="flex items-center gap-2">
+                <Avatar className="w-6 h-6">
+                  <AvatarImage src={author?.image_url || undefined} alt={post.author} />
+                  <AvatarFallback className="text-xs">{getInitials(post.author)}</AvatarFallback>
+                </Avatar>
+                {post.author}
+              </span>
             </div>
           </header>
 
