@@ -317,6 +317,68 @@ export default function AdminPages() {
     window.open(url, '_blank');
   };
 
+  const duplicatePage = async (page: Page) => {
+    try {
+      // Generate unique slug
+      const newSlug = `${page.slug}-copy-${Date.now().toString(36)}`;
+      
+      // Create duplicate page
+      const { data: newPage, error: pageError } = await supabase
+        .from('pages')
+        .insert({
+          title: `${page.title} (Salinan)`,
+          slug: newSlug,
+          parent_id: page.parent_id,
+          meta_description: page.meta_description,
+          featured_image: page.featured_image,
+          is_published: false, // Always start as draft
+          position: pages.length,
+        })
+        .select()
+        .single();
+
+      if (pageError) throw pageError;
+
+      // Fetch original page blocks
+      const { data: originalBlocks, error: blocksError } = await supabase
+        .from('page_blocks')
+        .select('*')
+        .eq('page_id', page.id)
+        .order('position', { ascending: true });
+
+      if (blocksError) throw blocksError;
+
+      // Duplicate blocks if any
+      if (originalBlocks && originalBlocks.length > 0) {
+        const newBlocks = originalBlocks.map(block => ({
+          page_id: newPage.id,
+          type: block.type,
+          content: block.content,
+          position: block.position,
+        }));
+
+        const { error: insertBlocksError } = await supabase
+          .from('page_blocks')
+          .insert(newBlocks);
+
+        if (insertBlocksError) throw insertBlocksError;
+      }
+
+      toast({
+        title: 'Berhasil',
+        description: `Halaman "${page.title}" berhasil diduplikasi`,
+      });
+
+      fetchPages();
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
   if (loading) {
     return <div className="p-6">Loading...</div>;
   }
@@ -515,6 +577,18 @@ export default function AdminPages() {
                           <TooltipContent>
                             {page.is_published ? 'Jadikan Draft' : 'Publikasikan'}
                           </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => duplicatePage(page)}
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Duplikasi</TooltipContent>
                         </Tooltip>
                         <Tooltip>
                           <TooltipTrigger asChild>
