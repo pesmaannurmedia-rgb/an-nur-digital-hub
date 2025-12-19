@@ -162,22 +162,36 @@ export default function AdminPosts() {
   const onSubmit = async (values: PostFormValues) => {
     setIsSubmitting(true);
     try {
-      const postData = {
-        ...values,
-        image_url: values.image_url || null,
-        published_at: values.is_published ? new Date().toISOString() : null,
-      };
-
       if (editingPost) {
         const { error } = await supabase
           .from('posts')
-          .update(postData)
+          .update({
+            title: values.title,
+            slug: values.slug,
+            excerpt: values.excerpt || null,
+            content: values.content,
+            category: values.category,
+            author: values.author,
+            image_url: values.image_url || null,
+            is_published: values.is_published,
+            published_at: values.is_published ? new Date().toISOString() : null,
+          })
           .eq('id', editingPost.id);
 
         if (error) throw error;
         toast({ title: 'Berhasil', description: 'Artikel berhasil diperbarui' });
       } else {
-        const { error } = await supabase.from('posts').insert([postData]);
+        const { error } = await supabase.from('posts').insert([{
+          title: values.title,
+          slug: values.slug,
+          excerpt: values.excerpt || null,
+          content: values.content,
+          category: values.category,
+          author: values.author,
+          image_url: values.image_url || null,
+          is_published: values.is_published,
+          published_at: values.is_published ? new Date().toISOString() : null,
+        }]);
 
         if (error) throw error;
         toast({ title: 'Berhasil', description: 'Artikel berhasil ditambahkan' });

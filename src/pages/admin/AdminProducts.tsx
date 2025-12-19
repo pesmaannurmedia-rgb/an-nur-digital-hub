@@ -172,8 +172,14 @@ export default function AdminProducts() {
         toast({ title: 'Berhasil', description: 'Produk berhasil diperbarui' });
       } else {
         const { error } = await supabase.from('products').insert([{
-          ...values,
+          name: values.name,
+          slug: values.slug,
+          price: values.price,
+          category: values.category,
+          description: values.description || null,
           image_url: values.image_url || null,
+          stock: values.stock,
+          is_active: values.is_active,
         }]);
 
         if (error) throw error;
