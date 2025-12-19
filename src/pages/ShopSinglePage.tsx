@@ -1,10 +1,10 @@
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, MessageSquare, Loader2, BookOpen, Calendar, Building2, FileText, Hash, Globe, BookMarked } from "lucide-react";
+import { ArrowLeft, MessageSquare, Loader2, BookOpen, Calendar, Building2, FileText, Hash, Globe, BookMarked, ExternalLink, Eye, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Helmet } from "react-helmet";
@@ -14,6 +14,7 @@ interface Book {
   name: string;
   slug: string;
   author: string | null;
+  author_affiliation: string | null;
   publisher: string | null;
   publish_year: number | null;
   edition: string | null;
@@ -22,8 +23,11 @@ interface Book {
   isbn: string | null;
   doi: string | null;
   abstract: string | null;
-  description: string | null;
+  table_of_contents: string | null;
   keywords: string[] | null;
+  book_format: string | null;
+  preview_link: string | null;
+  purchase_link: string | null;
   category: string;
   price: number;
   stock: number | null;
@@ -96,11 +100,11 @@ const ShopSinglePage = () => {
   const waLink = `https://wa.me/6281234567890?text=Assalamu'alaikum,%20saya%20ingin%20memesan%20buku%20"${encodeURIComponent(book.name)}"`;
   const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
 
-  // Format citation
+  // Format citation (Academic style)
   const formatCitation = () => {
     const parts = [];
     if (book.author) parts.push(book.author);
-    if (book.publish_year) parts.push(`(${book.publish_year})`);
+    if (book.publish_year) parts.push(`(${book.publish_year}).`);
     parts.push(`${book.name}.`);
     if (book.edition) parts.push(`${book.edition}.`);
     if (book.publisher) parts.push(`${book.publisher}.`);
@@ -108,16 +112,23 @@ const ShopSinglePage = () => {
     return parts.join(' ');
   };
 
+  // Parse table of contents
+  const parseToc = () => {
+    if (!book.table_of_contents) return [];
+    return book.table_of_contents.split('\n').filter(line => line.trim());
+  };
+
   return (
     <MainLayout>
       {/* SEO Meta Tags for Google Scholar */}
       <Helmet>
         <title>{book.name} | Toko Buku Pesantren An-Nur</title>
-        <meta name="description" content={book.abstract || book.description || `${book.name} oleh ${book.author}`} />
+        <meta name="description" content={book.abstract || `${book.name} oleh ${book.author}`} />
         
         {/* Google Scholar Meta Tags */}
         <meta name="citation_title" content={book.name} />
         {book.author && <meta name="citation_author" content={book.author} />}
+        {book.author_affiliation && <meta name="citation_author_institution" content={book.author_affiliation} />}
         {book.publish_year && <meta name="citation_publication_date" content={String(book.publish_year)} />}
         {book.publisher && <meta name="citation_publisher" content={book.publisher} />}
         {book.isbn && <meta name="citation_isbn" content={book.isbn} />}
@@ -140,7 +151,7 @@ const ShopSinglePage = () => {
         {/* Open Graph */}
         <meta property="og:title" content={book.name} />
         <meta property="og:type" content="book" />
-        <meta property="og:description" content={book.abstract || book.description || ''} />
+        <meta property="og:description" content={book.abstract || ''} />
         {book.image_url && <meta property="og:image" content={book.image_url} />}
         <meta property="og:url" content={currentUrl} />
         {book.isbn && <meta property="book:isbn" content={book.isbn} />}
@@ -156,7 +167,7 @@ const ShopSinglePage = () => {
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Book Cover - Left Column */}
             <div className="lg:col-span-1">
-              <div className="sticky top-24">
+              <div className="sticky top-24 space-y-4">
                 <div className="rounded-xl overflow-hidden bg-muted shadow-lg">
                   {book.image_url ? (
                     <img 
@@ -172,7 +183,7 @@ const ShopSinglePage = () => {
                 </div>
                 
                 {/* Price & Order */}
-                <Card className="mt-4">
+                <Card>
                   <CardContent className="p-4 space-y-4">
                     <div className="text-center">
                       <p className="text-3xl font-bold text-primary">
@@ -183,6 +194,12 @@ const ShopSinglePage = () => {
                           {book.stock > 0 ? `Stok: ${book.stock} tersedia` : 'Stok habis'}
                         </p>
                       )}
+                      {book.book_format && (
+                        <Badge variant="outline" className="mt-2">
+                          <Layers className="w-3 h-3 mr-1" />
+                          {book.book_format}
+                        </Badge>
+                      )}
                     </div>
                     <Button size="lg" className="w-full" asChild disabled={book.stock === 0}>
                       <a href={waLink} target="_blank" rel="noopener noreferrer">
@@ -190,6 +207,22 @@ const ShopSinglePage = () => {
                         Pesan Sekarang
                       </a>
                     </Button>
+                    {book.purchase_link && (
+                      <Button size="lg" variant="outline" className="w-full" asChild>
+                        <a href={book.purchase_link} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="w-4 h-4 mr-2" />
+                          Beli di Marketplace
+                        </a>
+                      </Button>
+                    )}
+                    {book.preview_link && (
+                      <Button size="lg" variant="ghost" className="w-full" asChild>
+                        <a href={book.preview_link} target="_blank" rel="noopener noreferrer">
+                          <Eye className="w-4 h-4 mr-2" />
+                          Lihat Preview
+                        </a>
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -204,69 +237,80 @@ const ShopSinglePage = () => {
                   {book.name}
                 </h1>
                 {book.author && (
-                  <p className="text-lg text-muted-foreground">
-                    oleh <span className="text-foreground font-medium">{book.author}</span>
-                  </p>
+                  <div className="space-y-1">
+                    <p className="text-lg text-muted-foreground">
+                      oleh <span className="text-foreground font-medium">{book.author}</span>
+                    </p>
+                    {book.author_affiliation && (
+                      <p className="text-sm text-muted-foreground italic">
+                        {book.author_affiliation}
+                      </p>
+                    )}
+                  </div>
                 )}
               </header>
 
-              {/* Publication Info */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {book.publisher && (
-                  <div className="flex items-start gap-2">
-                    <Building2 className="w-4 h-4 mt-1 text-muted-foreground" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Penerbit</p>
-                      <p className="text-sm font-medium">{book.publisher}</p>
-                    </div>
+              {/* Publication Info Grid */}
+              <Card>
+                <CardContent className="p-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {book.publisher && (
+                      <div className="flex items-start gap-2">
+                        <Building2 className="w-4 h-4 mt-1 text-muted-foreground flex-shrink-0" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Penerbit</p>
+                          <p className="text-sm font-medium">{book.publisher}</p>
+                        </div>
+                      </div>
+                    )}
+                    {book.publish_year && (
+                      <div className="flex items-start gap-2">
+                        <Calendar className="w-4 h-4 mt-1 text-muted-foreground flex-shrink-0" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Tahun Terbit</p>
+                          <p className="text-sm font-medium">{book.publish_year}</p>
+                        </div>
+                      </div>
+                    )}
+                    {book.pages && (
+                      <div className="flex items-start gap-2">
+                        <FileText className="w-4 h-4 mt-1 text-muted-foreground flex-shrink-0" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Halaman</p>
+                          <p className="text-sm font-medium">{book.pages} halaman</p>
+                        </div>
+                      </div>
+                    )}
+                    {book.isbn && (
+                      <div className="flex items-start gap-2">
+                        <Hash className="w-4 h-4 mt-1 text-muted-foreground flex-shrink-0" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">ISBN / ISSN</p>
+                          <p className="text-sm font-medium">{book.isbn}</p>
+                        </div>
+                      </div>
+                    )}
+                    {book.language && (
+                      <div className="flex items-start gap-2">
+                        <Globe className="w-4 h-4 mt-1 text-muted-foreground flex-shrink-0" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Bahasa</p>
+                          <p className="text-sm font-medium">{book.language}</p>
+                        </div>
+                      </div>
+                    )}
+                    {book.edition && (
+                      <div className="flex items-start gap-2">
+                        <BookMarked className="w-4 h-4 mt-1 text-muted-foreground flex-shrink-0" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Edisi</p>
+                          <p className="text-sm font-medium">{book.edition}</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-                {book.publish_year && (
-                  <div className="flex items-start gap-2">
-                    <Calendar className="w-4 h-4 mt-1 text-muted-foreground" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Tahun Terbit</p>
-                      <p className="text-sm font-medium">{book.publish_year}</p>
-                    </div>
-                  </div>
-                )}
-                {book.pages && (
-                  <div className="flex items-start gap-2">
-                    <FileText className="w-4 h-4 mt-1 text-muted-foreground" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Halaman</p>
-                      <p className="text-sm font-medium">{book.pages} halaman</p>
-                    </div>
-                  </div>
-                )}
-                {book.isbn && (
-                  <div className="flex items-start gap-2">
-                    <Hash className="w-4 h-4 mt-1 text-muted-foreground" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">ISBN</p>
-                      <p className="text-sm font-medium">{book.isbn}</p>
-                    </div>
-                  </div>
-                )}
-                {book.language && (
-                  <div className="flex items-start gap-2">
-                    <Globe className="w-4 h-4 mt-1 text-muted-foreground" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Bahasa</p>
-                      <p className="text-sm font-medium">{book.language}</p>
-                    </div>
-                  </div>
-                )}
-                {book.edition && (
-                  <div className="flex items-start gap-2">
-                    <BookMarked className="w-4 h-4 mt-1 text-muted-foreground" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Edisi</p>
-                      <p className="text-sm font-medium">{book.edition}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
+                </CardContent>
+              </Card>
 
               <Separator />
 
@@ -274,19 +318,11 @@ const ShopSinglePage = () => {
               {book.abstract && (
                 <section>
                   <h2 className="text-lg font-semibold mb-3">Abstrak</h2>
-                  <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                    {book.abstract}
-                  </p>
-                </section>
-              )}
-
-              {/* Description */}
-              {book.description && (
-                <section>
-                  <h2 className="text-lg font-semibold mb-3">Deskripsi</h2>
-                  <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                    {book.description}
-                  </p>
+                  <div className="bg-muted/30 p-4 rounded-lg border-l-4 border-primary">
+                    <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                      {book.abstract}
+                    </p>
+                  </div>
                 </section>
               )}
 
@@ -304,14 +340,30 @@ const ShopSinglePage = () => {
                 </section>
               )}
 
+              {/* Table of Contents */}
+              {book.table_of_contents && (
+                <section>
+                  <h2 className="text-lg font-semibold mb-3">Daftar Isi</h2>
+                  <Card>
+                    <CardContent className="p-4">
+                      <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
+                        {parseToc().map((item, index) => (
+                          <li key={index} className="text-sm">{item}</li>
+                        ))}
+                      </ol>
+                    </CardContent>
+                  </Card>
+                </section>
+              )}
+
               <Separator />
 
               {/* Citation */}
               <section>
-                <h2 className="text-lg font-semibold mb-3">Sitasi</h2>
+                <h2 className="text-lg font-semibold mb-3">Cara Mengutip</h2>
                 <Card className="bg-muted/50">
                   <CardContent className="p-4">
-                    <p className="text-sm text-muted-foreground italic">
+                    <p className="text-sm text-muted-foreground italic font-serif">
                       {formatCitation()}
                     </p>
                   </CardContent>
@@ -326,9 +378,10 @@ const ShopSinglePage = () => {
                     href={`https://doi.org/${book.doi}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-primary hover:underline"
+                    className="text-primary hover:underline inline-flex items-center gap-1"
                   >
                     https://doi.org/{book.doi}
+                    <ExternalLink className="w-3 h-3" />
                   </a>
                 </section>
               )}
@@ -345,7 +398,11 @@ const ShopSinglePage = () => {
           "name": book.name,
           "author": book.author ? {
             "@type": "Person",
-            "name": book.author
+            "name": book.author,
+            "affiliation": book.author_affiliation ? {
+              "@type": "Organization",
+              "name": book.author_affiliation
+            } : undefined
           } : undefined,
           "publisher": book.publisher ? {
             "@type": "Organization",
@@ -355,9 +412,10 @@ const ShopSinglePage = () => {
           "isbn": book.isbn || undefined,
           "numberOfPages": book.pages || undefined,
           "inLanguage": book.language || undefined,
-          "description": book.abstract || book.description || undefined,
+          "abstract": book.abstract || undefined,
           "keywords": book.keywords?.join(", ") || undefined,
           "image": book.image_url || undefined,
+          "bookFormat": book.book_format === 'PDF' ? "EBook" : book.book_format === 'eBook' ? "EBook" : "Paperback",
           "offers": {
             "@type": "Offer",
             "price": book.price,

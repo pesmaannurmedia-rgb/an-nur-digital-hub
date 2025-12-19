@@ -363,6 +363,8 @@ export type Database = {
         Row: {
           abstract: string | null
           author: string | null
+          author_affiliation: string | null
+          book_format: string | null
           category: string
           created_at: string
           description: string | null
@@ -376,16 +378,21 @@ export type Database = {
           language: string | null
           name: string
           pages: number | null
+          preview_link: string | null
           price: number
           publish_year: number | null
           publisher: string | null
+          purchase_link: string | null
           slug: string
           stock: number | null
+          table_of_contents: string | null
           updated_at: string
         }
         Insert: {
           abstract?: string | null
           author?: string | null
+          author_affiliation?: string | null
+          book_format?: string | null
           category?: string
           created_at?: string
           description?: string | null
@@ -399,16 +406,21 @@ export type Database = {
           language?: string | null
           name: string
           pages?: number | null
+          preview_link?: string | null
           price?: number
           publish_year?: number | null
           publisher?: string | null
+          purchase_link?: string | null
           slug: string
           stock?: number | null
+          table_of_contents?: string | null
           updated_at?: string
         }
         Update: {
           abstract?: string | null
           author?: string | null
+          author_affiliation?: string | null
+          book_format?: string | null
           category?: string
           created_at?: string
           description?: string | null
@@ -422,11 +434,14 @@ export type Database = {
           language?: string | null
           name?: string
           pages?: number | null
+          preview_link?: string | null
           price?: number
           publish_year?: number | null
           publisher?: string | null
+          purchase_link?: string | null
           slug?: string
           stock?: number | null
+          table_of_contents?: string | null
           updated_at?: string
         }
         Relationships: []

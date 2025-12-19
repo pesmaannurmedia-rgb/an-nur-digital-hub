@@ -56,6 +56,7 @@ const bookSchema = z.object({
   name: z.string().min(1, 'Judul buku wajib diisi'),
   slug: z.string().min(1, 'Slug wajib diisi'),
   author: z.string().min(1, 'Penulis wajib diisi'),
+  author_affiliation: z.string().optional(),
   
   // Informasi Penerbitan
   publisher: z.string().optional(),
@@ -70,8 +71,13 @@ const bookSchema = z.object({
   
   // Konten
   abstract: z.string().optional(),
-  description: z.string().optional(),
-  keywords: z.string().optional(), // Comma-separated
+  table_of_contents: z.string().optional(),
+  keywords: z.string().optional(),
+  
+  // Format & Link
+  book_format: z.string().default('Cetak'),
+  preview_link: z.string().optional(),
+  purchase_link: z.string().optional(),
   
   // Kategori & Harga
   category: z.string().min(1, 'Kategori wajib dipilih'),
@@ -90,6 +96,7 @@ interface Book {
   name: string;
   slug: string;
   author: string | null;
+  author_affiliation: string | null;
   publisher: string | null;
   publish_year: number | null;
   edition: string | null;
@@ -98,8 +105,11 @@ interface Book {
   isbn: string | null;
   doi: string | null;
   abstract: string | null;
-  description: string | null;
+  table_of_contents: string | null;
   keywords: string[] | null;
+  book_format: string | null;
+  preview_link: string | null;
+  purchase_link: string | null;
   category: string;
   price: number;
   stock: number | null;
@@ -129,6 +139,7 @@ export default function AdminBooks() {
       name: '',
       slug: '',
       author: '',
+      author_affiliation: '',
       publisher: '',
       publish_year: '',
       edition: '',
@@ -137,8 +148,11 @@ export default function AdminBooks() {
       isbn: '',
       doi: '',
       abstract: '',
-      description: '',
+      table_of_contents: '',
       keywords: '',
+      book_format: 'Cetak',
+      preview_link: '',
+      purchase_link: '',
       category: '',
       price: 0,
       stock: 0,
@@ -203,6 +217,7 @@ export default function AdminBooks() {
       name: '',
       slug: '',
       author: '',
+      author_affiliation: '',
       publisher: '',
       publish_year: '',
       edition: '',
@@ -211,8 +226,11 @@ export default function AdminBooks() {
       isbn: '',
       doi: '',
       abstract: '',
-      description: '',
+      table_of_contents: '',
       keywords: '',
+      book_format: 'Cetak',
+      preview_link: '',
+      purchase_link: '',
       category: categories[0]?.name || '',
       price: 0,
       stock: 0,
@@ -228,6 +246,7 @@ export default function AdminBooks() {
       name: book.name,
       slug: book.slug,
       author: book.author || '',
+      author_affiliation: book.author_affiliation || '',
       publisher: book.publisher || '',
       publish_year: book.publish_year || '',
       edition: book.edition || '',
@@ -236,8 +255,11 @@ export default function AdminBooks() {
       isbn: book.isbn || '',
       doi: book.doi || '',
       abstract: book.abstract || '',
-      description: book.description || '',
+      table_of_contents: book.table_of_contents || '',
       keywords: book.keywords?.join(', ') || '',
+      book_format: book.book_format || 'Cetak',
+      preview_link: book.preview_link || '',
+      purchase_link: book.purchase_link || '',
       category: book.category,
       price: book.price,
       stock: book.stock || 0,
@@ -258,6 +280,7 @@ export default function AdminBooks() {
         name: values.name,
         slug: values.slug,
         author: values.author || null,
+        author_affiliation: values.author_affiliation || null,
         publisher: values.publisher || null,
         publish_year: values.publish_year ? Number(values.publish_year) : null,
         edition: values.edition || null,
@@ -266,8 +289,11 @@ export default function AdminBooks() {
         isbn: values.isbn || null,
         doi: values.doi || null,
         abstract: values.abstract || null,
-        description: values.description || null,
+        table_of_contents: values.table_of_contents || null,
         keywords: keywordsArray,
+        book_format: values.book_format || 'Cetak',
+        preview_link: values.preview_link || null,
+        purchase_link: values.purchase_link || null,
         category: values.category,
         price: values.price,
         stock: values.stock,
@@ -434,9 +460,24 @@ export default function AdminBooks() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Penulis</FormLabel>
-                          <FormDescription>Nama penulis. Jika lebih dari satu, pisahkan dengan koma</FormDescription>
+                          <FormDescription>Nama penulis lengkap (tanpa singkatan). Jika lebih dari satu, pisahkan dengan koma</FormDescription>
                           <FormControl>
                             <Input placeholder="Contoh: Prof. Dr. Ahmad Dahlan, M.Pd." {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="author_affiliation"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Afiliasi Penulis (Opsional)</FormLabel>
+                          <FormDescription>Institusi atau universitas penulis</FormDescription>
+                          <FormControl>
+                            <Input placeholder="Contoh: Universitas Islam Negeri Sunan Kalijaga" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -627,18 +668,81 @@ export default function AdminBooks() {
 
                     <FormField
                       control={form.control}
-                      name="description"
+                      name="table_of_contents"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Deskripsi Tambahan</FormLabel>
-                          <FormDescription>Informasi tambahan untuk pembeli (keunggulan, target pembaca, dll)</FormDescription>
+                          <FormLabel>Daftar Isi / Daftar Bab</FormLabel>
+                          <FormDescription>Tuliskan daftar bab atau isi buku (satu bab per baris)</FormDescription>
                           <FormControl>
-                            <Textarea rows={3} {...field} />
+                            <Textarea rows={6} placeholder="Bab 1: Pendahuluan&#10;Bab 2: Landasan Teori&#10;Bab 3: Metodologi..." {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+                  </div>
+
+                  {/* Section: Format & Link */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-foreground">Format & Link</h3>
+                    <Separator />
+                    
+                    <FormField
+                      control={form.control}
+                      name="book_format"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Format Buku</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Pilih format" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="Cetak">Cetak (Hardcopy)</SelectItem>
+                              <SelectItem value="PDF">PDF Digital</SelectItem>
+                              <SelectItem value="eBook">eBook</SelectItem>
+                              <SelectItem value="Cetak & PDF">Cetak & PDF</SelectItem>
+                              <SelectItem value="Semua Format">Semua Format</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="preview_link"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Link Preview / Sample Bab</FormLabel>
+                            <FormDescription>Link ke preview buku atau sample bab (opsional)</FormDescription>
+                            <FormControl>
+                              <Input placeholder="https://..." {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="purchase_link"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Link Pembelian Eksternal</FormLabel>
+                            <FormDescription>Link ke marketplace atau situs lain (opsional)</FormDescription>
+                            <FormControl>
+                              <Input placeholder="https://..." {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </div>
 
                   {/* Section: Kategori & Harga */}
