@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/admin/RichTextEditor';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Table,
@@ -480,7 +481,11 @@ export default function AdminPosts() {
                     <FormItem>
                       <FormLabel>Konten Artikel</FormLabel>
                       <FormControl>
-                        <Textarea rows={10} placeholder="Tulis konten artikel di sini..." {...field} />
+                        <RichTextEditor
+                          value={field.value}
+                          onChange={field.onChange}
+                          placeholder="Tulis konten artikel di sini..."
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
