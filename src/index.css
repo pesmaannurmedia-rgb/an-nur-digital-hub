@@ -7,149 +7,149 @@
 @layer base {
   :root {
     /* ==========================================
-       PALETTE: Deep Ocean Teal + Warm Gold
-       Inspired by Islamic art & modern elegance
+       PALETTE: Royal Navy + Warm Gold
+       Elegant, institutional, Islamic education
        ========================================== */
     
-    /* Primary - Deep Teal (calming, spiritual) */
-    --primary: 192 70% 35%;
-    --primary-foreground: 45 30% 98%;
-    --primary-light: 190 60% 50%;
+    /* Primary - Deep Navy Blue (royal, trustworthy) */
+    --primary: 220 65% 28%;
+    --primary-foreground: 45 25% 98%;
+    --primary-light: 218 55% 45%;
     
     /* Secondary - Warm Gold (elegant, premium) */
-    --secondary: 42 75% 48%;
-    --secondary-foreground: 42 80% 12%;
+    --secondary: 40 72% 50%;
+    --secondary-foreground: 40 80% 12%;
     
-    /* Background - Warm Cream tones */
-    --background: 45 25% 98%;
-    --foreground: 200 25% 18%;
+    /* Background - Soft warm ivory */
+    --background: 42 30% 98%;
+    --foreground: 220 35% 16%;
     
-    /* Card - Soft warm white */
-    --card: 45 30% 99%;
-    --card-foreground: 200 25% 18%;
+    /* Card */
+    --card: 42 35% 99%;
+    --card-foreground: 220 35% 16%;
     
-    --popover: 45 30% 99%;
-    --popover-foreground: 200 25% 18%;
+    --popover: 42 35% 99%;
+    --popover-foreground: 220 35% 16%;
     
-    /* Muted - Warm gray */
-    --muted: 45 15% 93%;
-    --muted-foreground: 200 12% 45%;
+    /* Muted - Warm gray with slight blue */
+    --muted: 42 18% 93%;
+    --muted-foreground: 220 15% 42%;
     
     /* Accent - Light gold tint */
-    --accent: 42 50% 92%;
-    --accent-foreground: 200 25% 18%;
+    --accent: 40 55% 92%;
+    --accent-foreground: 220 35% 16%;
     
-    --destructive: 0 70% 50%;
+    --destructive: 0 68% 48%;
     --destructive-foreground: 0 0% 100%;
     
-    /* Border - Soft warm tone */
-    --border: 45 20% 88%;
-    --input: 45 20% 88%;
-    --ring: 192 70% 35%;
+    /* Border */
+    --border: 42 22% 87%;
+    --input: 42 22% 87%;
+    --ring: 220 65% 28%;
     
     --radius: 0.75rem;
     
-    /* Surface - Slightly tinted */
-    --surface: 45 20% 96%;
-    --surface-foreground: 200 25% 18%;
+    /* Surface */
+    --surface: 42 25% 96%;
+    --surface-foreground: 220 35% 16%;
     
     /* Success */
-    --success: 160 65% 40%;
+    --success: 152 60% 38%;
     --success-foreground: 0 0% 100%;
     
-    /* Hero gradient - Teal to Gold blend */
-    --hero-gradient: linear-gradient(135deg, hsl(192 70% 35%) 0%, hsl(192 60% 42%) 40%, hsl(42 65% 52%) 100%);
-    --hero-overlay: linear-gradient(180deg, hsla(192 70% 30% / 0.88) 0%, hsla(200 30% 12% / 0.85) 100%);
+    /* Hero gradient - Navy to Gold elegant blend */
+    --hero-gradient: linear-gradient(135deg, hsl(220 65% 28%) 0%, hsl(220 55% 38%) 50%, hsl(40 60% 48%) 100%);
+    --hero-overlay: linear-gradient(180deg, hsla(220 65% 22% / 0.9) 0%, hsla(220 40% 12% / 0.85) 100%);
     
-    /* Shadows - Warm tinted */
-    --shadow-sm: 0 1px 3px 0 hsla(200 25% 18% / 0.05), 0 1px 2px -1px hsla(200 25% 18% / 0.04);
-    --shadow-md: 0 4px 8px -2px hsla(200 25% 18% / 0.08), 0 2px 4px -2px hsla(200 25% 18% / 0.05);
-    --shadow-lg: 0 12px 28px -6px hsla(200 25% 18% / 0.1), 0 4px 10px -4px hsla(200 25% 18% / 0.06);
-    --shadow-glow: 0 0 24px hsla(192 70% 35% / 0.25);
-    --shadow-glow-gold: 0 0 24px hsla(42 75% 48% / 0.25);
-    --shadow-card-hover: 0 8px 24px -6px hsla(192 70% 35% / 0.15), 0 4px 10px -4px hsla(42 75% 48% / 0.1);
+    /* Shadows */
+    --shadow-sm: 0 1px 3px 0 hsla(220 35% 16% / 0.05), 0 1px 2px -1px hsla(220 35% 16% / 0.04);
+    --shadow-md: 0 4px 8px -2px hsla(220 35% 16% / 0.08), 0 2px 4px -2px hsla(220 35% 16% / 0.05);
+    --shadow-lg: 0 12px 28px -6px hsla(220 35% 16% / 0.1), 0 4px 10px -4px hsla(220 35% 16% / 0.06);
+    --shadow-glow: 0 0 24px hsla(220 65% 28% / 0.2);
+    --shadow-glow-gold: 0 0 24px hsla(40 72% 50% / 0.25);
+    --shadow-card-hover: 0 8px 24px -6px hsla(220 65% 28% / 0.12), 0 4px 10px -4px hsla(40 72% 50% / 0.08);
     
     /* Sidebar */
-    --sidebar-background: 45 25% 97%;
-    --sidebar-foreground: 200 20% 35%;
-    --sidebar-primary: 192 70% 35%;
-    --sidebar-primary-foreground: 45 30% 98%;
-    --sidebar-accent: 42 45% 92%;
-    --sidebar-accent-foreground: 200 25% 18%;
-    --sidebar-border: 45 20% 90%;
-    --sidebar-ring: 192 70% 35%;
+    --sidebar-background: 42 28% 97%;
+    --sidebar-foreground: 220 30% 32%;
+    --sidebar-primary: 220 65% 28%;
+    --sidebar-primary-foreground: 45 25% 98%;
+    --sidebar-accent: 40 50% 92%;
+    --sidebar-accent-foreground: 220 35% 16%;
+    --sidebar-border: 42 22% 90%;
+    --sidebar-ring: 220 65% 28%;
   }
 
   .dark {
     /* ==========================================
-       DARK MODE: Deep Ocean + Warm Gold
+       DARK MODE: Royal Navy + Warm Gold
        ========================================== */
     
-    /* Primary - Brighter Teal for dark */
-    --primary: 190 65% 50%;
-    --primary-foreground: 200 30% 8%;
-    --primary-light: 188 55% 60%;
+    /* Primary - Lighter Navy for dark */
+    --primary: 218 55% 52%;
+    --primary-foreground: 220 40% 8%;
+    --primary-light: 216 50% 62%;
     
     /* Secondary - Brighter Gold for dark */
-    --secondary: 42 80% 55%;
-    --secondary-foreground: 42 85% 10%;
+    --secondary: 40 78% 55%;
+    --secondary-foreground: 40 85% 10%;
     
-    /* Background - Deep warm charcoal */
-    --background: 200 20% 8%;
-    --foreground: 45 20% 92%;
+    /* Background - Deep navy charcoal */
+    --background: 222 25% 8%;
+    --foreground: 42 22% 92%;
     
     /* Card */
-    --card: 200 18% 11%;
-    --card-foreground: 45 20% 92%;
+    --card: 222 22% 11%;
+    --card-foreground: 42 22% 92%;
     
-    --popover: 200 18% 11%;
-    --popover-foreground: 45 20% 92%;
+    --popover: 222 22% 11%;
+    --popover-foreground: 42 22% 92%;
     
     /* Muted */
-    --muted: 200 15% 15%;
-    --muted-foreground: 45 12% 58%;
+    --muted: 222 18% 15%;
+    --muted-foreground: 42 15% 58%;
     
     /* Accent */
-    --accent: 42 40% 18%;
-    --accent-foreground: 45 20% 92%;
+    --accent: 40 35% 18%;
+    --accent-foreground: 42 22% 92%;
     
-    --destructive: 0 60% 45%;
-    --destructive-foreground: 45 20% 92%;
+    --destructive: 0 58% 42%;
+    --destructive-foreground: 42 22% 92%;
     
     /* Border */
-    --border: 200 15% 18%;
-    --input: 200 15% 18%;
-    --ring: 190 65% 50%;
+    --border: 222 18% 18%;
+    --input: 222 18% 18%;
+    --ring: 218 55% 52%;
     
     /* Surface */
-    --surface: 200 16% 12%;
-    --surface-foreground: 45 20% 92%;
+    --surface: 222 20% 12%;
+    --surface-foreground: 42 22% 92%;
     
     /* Success */
-    --success: 160 55% 45%;
+    --success: 152 52% 45%;
     --success-foreground: 0 0% 100%;
     
-    /* Hero gradient - Dark with subtle gold */
-    --hero-gradient: linear-gradient(135deg, hsl(200 18% 11%) 0%, hsl(195 30% 18%) 50%, hsl(42 30% 15%) 100%);
-    --hero-overlay: linear-gradient(180deg, hsla(200 20% 8% / 0.7) 0%, hsla(200 20% 8% / 0.92) 100%);
+    /* Hero gradient - Dark navy with gold accent */
+    --hero-gradient: linear-gradient(135deg, hsl(222 22% 11%) 0%, hsl(220 30% 18%) 50%, hsl(40 28% 15%) 100%);
+    --hero-overlay: linear-gradient(180deg, hsla(222 25% 8% / 0.7) 0%, hsla(222 25% 8% / 0.92) 100%);
     
-    /* Shadows - Dark */
+    /* Shadows */
     --shadow-sm: 0 1px 3px 0 hsla(0 0% 0% / 0.3);
     --shadow-md: 0 4px 8px -2px hsla(0 0% 0% / 0.4), 0 2px 4px -2px hsla(0 0% 0% / 0.3);
     --shadow-lg: 0 12px 28px -6px hsla(0 0% 0% / 0.45), 0 4px 10px -4px hsla(0 0% 0% / 0.35);
-    --shadow-glow: 0 0 28px hsla(190 65% 50% / 0.3);
-    --shadow-glow-gold: 0 0 24px hsla(42 80% 55% / 0.25);
-    --shadow-card-hover: 0 8px 24px -6px hsla(190 65% 50% / 0.2), 0 4px 10px -4px hsla(42 80% 55% / 0.12);
+    --shadow-glow: 0 0 28px hsla(218 55% 52% / 0.25);
+    --shadow-glow-gold: 0 0 24px hsla(40 78% 55% / 0.25);
+    --shadow-card-hover: 0 8px 24px -6px hsla(218 55% 52% / 0.18), 0 4px 10px -4px hsla(40 78% 55% / 0.1);
     
     /* Sidebar */
-    --sidebar-background: 200 18% 9%;
-    --sidebar-foreground: 45 18% 82%;
-    --sidebar-primary: 190 65% 50%;
-    --sidebar-primary-foreground: 200 30% 8%;
-    --sidebar-accent: 42 35% 16%;
-    --sidebar-accent-foreground: 45 20% 92%;
-    --sidebar-border: 200 15% 18%;
-    --sidebar-ring: 190 65% 50%;
+    --sidebar-background: 222 22% 9%;
+    --sidebar-foreground: 42 20% 82%;
+    --sidebar-primary: 218 55% 52%;
+    --sidebar-primary-foreground: 220 40% 8%;
+    --sidebar-accent: 40 32% 16%;
+    --sidebar-accent-foreground: 42 22% 92%;
+    --sidebar-border: 222 18% 18%;
+    --sidebar-ring: 218 55% 52%;
   }
 }
 
