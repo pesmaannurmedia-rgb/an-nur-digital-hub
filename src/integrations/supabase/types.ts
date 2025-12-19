@@ -368,11 +368,14 @@ export type Database = {
           category: string
           created_at: string
           description: string | null
+          discount_percentage: number | null
+          discount_price: number | null
           doi: string | null
           edition: string | null
           id: string
           image_url: string | null
           is_active: boolean | null
+          is_on_sale: boolean | null
           isbn: string | null
           keywords: string[] | null
           language: string | null
@@ -396,11 +399,14 @@ export type Database = {
           category?: string
           created_at?: string
           description?: string | null
+          discount_percentage?: number | null
+          discount_price?: number | null
           doi?: string | null
           edition?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          is_on_sale?: boolean | null
           isbn?: string | null
           keywords?: string[] | null
           language?: string | null
@@ -424,11 +430,14 @@ export type Database = {
           category?: string
           created_at?: string
           description?: string | null
+          discount_percentage?: number | null
+          discount_price?: number | null
           doi?: string | null
           edition?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          is_on_sale?: boolean | null
           isbn?: string | null
           keywords?: string[] | null
           language?: string | null
