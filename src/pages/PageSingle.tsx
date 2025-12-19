@@ -175,6 +175,32 @@ function BlockRenderer({ block }: { block: PageBlock }) {
         </figure>
       );
 
+    case 'gallery':
+      const images = content.images || [];
+      const columns = content.columns || 3;
+      const gridCols = columns === 2 ? 'grid-cols-2' : columns === 4 ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2 md:grid-cols-3';
+      
+      return (
+        <figure className="my-8">
+          <div className={`grid ${gridCols} gap-4`}>
+            {images.map((image: { url: string; alt: string; caption?: string }, index: number) => (
+              <div key={index} className="group relative overflow-hidden rounded-lg">
+                <img
+                  src={image.url}
+                  alt={image.alt || `Galeri ${index + 1}`}
+                  className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+              </div>
+            ))}
+          </div>
+          {content.caption && (
+            <figcaption className="text-center text-muted-foreground mt-3 text-sm">
+              {content.caption}
+            </figcaption>
+          )}
+        </figure>
+      );
+
     case 'video':
       const videoUrl = content.url || '';
       let embedUrl = videoUrl;
