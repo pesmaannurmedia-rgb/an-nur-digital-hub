@@ -10,6 +10,7 @@ import BlogPage from "./pages/BlogPage";
 import BlogSinglePage from "./pages/BlogSinglePage";
 import ShopPage from "./pages/ShopPage";
 import ShopSinglePage from "./pages/ShopSinglePage";
+import PageSingle from "./pages/PageSingle";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 import { AdminLayout } from "./components/admin/AdminLayout";
@@ -22,6 +23,7 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminAuthors from "./pages/admin/AdminAuthors";
 import AdminMenuLinks from "./pages/admin/AdminMenuLinks";
+import AdminPages from "./pages/admin/AdminPages";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +41,7 @@ const App = () => (
               <Route path="/blog/:slug" element={<BlogSinglePage />} />
               <Route path="/shop" element={<ShopPage />} />
               <Route path="/shop/:slug" element={<ShopSinglePage />} />
+              <Route path="/page/:slug" element={<PageSingle />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />
@@ -50,6 +53,7 @@ const App = () => (
                 <Route path="categories" element={<AdminCategories />} />
                 <Route path="authors" element={<AdminAuthors />} />
                 <Route path="menu-links" element={<AdminMenuLinks />} />
+                <Route path="pages" element={<AdminPages />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
