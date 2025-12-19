@@ -1,4 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import {
   LayoutDashboard,
   FileText,
@@ -18,15 +19,17 @@ import {
   Newspaper,
   Settings,
   Database,
+  ImageIcon,
+  Cog,
 } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -40,6 +43,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 const menuGroups = [
   {
@@ -57,6 +61,7 @@ const menuGroups = [
       { title: 'Artikel', url: '/admin/posts', icon: FileText },
       { title: 'Halaman', url: '/admin/pages', icon: FileStack },
       { title: 'Galeri', url: '/admin/gallery', icon: Images },
+      { title: 'Media Library', url: '/admin/media', icon: ImageIcon },
     ],
   },
   {
@@ -73,13 +78,14 @@ const menuGroups = [
     icon: MessageSquare,
     items: [
       { title: 'Pengumuman', url: '/admin/announcements', icon: Bell },
-      { title: 'Pesan Masuk', url: '/admin/messages', icon: MessageSquare },
+      { title: 'Pesan Masuk', url: '/admin/messages', icon: MessageSquare, hasBadge: true },
     ],
   },
   {
     title: 'Pengaturan',
     icon: Settings,
     items: [
+      { title: 'Pengaturan Website', url: '/admin/settings', icon: Cog },
       { title: 'Kelola Admin', url: '/admin/users', icon: Users },
     ],
   },
@@ -90,6 +96,39 @@ export function AdminSidebar() {
   const { signOut } = useAuthContext();
   const { state } = useSidebar();
   const isCollapsed = state === 'collapsed';
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    fetchUnreadCount();
+
+    // Subscribe to realtime updates
+    const channel = supabase
+      .channel('messages-count')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'contact_messages',
+        },
+        () => {
+          fetchUnreadCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const fetchUnreadCount = async () => {
+    const { count } = await supabase
+      .from('contact_messages')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_read', false);
+    setUnreadCount(count || 0);
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -165,6 +204,7 @@ export function AdminSidebar() {
                       <SidebarMenu className="pl-4 mt-1 space-y-1">
                         {group.items.map((item) => {
                           const isActive = location.pathname === item.url;
+                          const showBadge = 'hasBadge' in item && item.hasBadge && unreadCount > 0;
                           return (
                             <SidebarMenuItem key={item.title}>
                               <SidebarMenuButton asChild>
@@ -178,7 +218,17 @@ export function AdminSidebar() {
                                   )}
                                 >
                                   <item.icon className="h-4 w-4" />
-                                  {!isCollapsed && <span>{item.title}</span>}
+                                  {!isCollapsed && (
+                                    <span className="flex-1">{item.title}</span>
+                                  )}
+                                  {showBadge && (
+                                    <Badge 
+                                      variant="destructive" 
+                                      className="ml-auto h-5 min-w-5 flex items-center justify-center text-xs px-1.5"
+                                    >
+                                      {unreadCount}
+                                    </Badge>
+                                  )}
                                 </NavLink>
                               </SidebarMenuButton>
                             </SidebarMenuItem>

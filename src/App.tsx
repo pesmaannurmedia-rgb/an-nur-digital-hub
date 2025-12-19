@@ -26,6 +26,8 @@ import AdminAuthors from "./pages/admin/AdminAuthors";
 import AdminMenuLinks from "./pages/admin/AdminMenuLinks";
 import AdminPages from "./pages/admin/AdminPages";
 import AdminGallery from "./pages/admin/AdminGallery";
+import AdminSiteSettings from "./pages/admin/AdminSiteSettings";
+import AdminMediaLibrary from "./pages/admin/AdminMediaLibrary";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +61,8 @@ const App = () => (
                 <Route path="menu-links" element={<AdminMenuLinks />} />
                 <Route path="pages" element={<AdminPages />} />
                 <Route path="gallery" element={<AdminGallery />} />
+                <Route path="settings" element={<AdminSiteSettings />} />
+                <Route path="media" element={<AdminMediaLibrary />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

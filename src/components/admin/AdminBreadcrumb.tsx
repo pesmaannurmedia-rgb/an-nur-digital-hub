@@ -16,11 +16,13 @@ const routeLabels: Record<string, { label: string; parent?: string }> = {
   '/admin/posts': { label: 'Artikel', parent: 'Konten' },
   '/admin/pages': { label: 'Halaman', parent: 'Konten' },
   '/admin/gallery': { label: 'Galeri', parent: 'Konten' },
+  '/admin/media': { label: 'Media Library', parent: 'Konten' },
   '/admin/authors': { label: 'Penulis', parent: 'Master Data' },
   '/admin/categories': { label: 'Kategori', parent: 'Master Data' },
   '/admin/menu-links': { label: 'Menu & Link', parent: 'Master Data' },
   '/admin/announcements': { label: 'Pengumuman', parent: 'Komunikasi' },
   '/admin/messages': { label: 'Pesan Masuk', parent: 'Komunikasi' },
+  '/admin/settings': { label: 'Pengaturan Website', parent: 'Pengaturan' },
   '/admin/users': { label: 'Kelola Admin', parent: 'Pengaturan' },
 };
 
