@@ -28,7 +28,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Plus, Pencil, Trash2, FileText, ChevronRight, Eye } from 'lucide-react';
+import { Plus, Pencil, Trash2, FileText, ChevronRight, Eye, EyeOff, ExternalLink } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { BlockEditor, Block } from '@/components/admin/BlockEditor';
 import { ImageUpload } from '@/components/admin/ImageUpload';
@@ -278,11 +285,44 @@ export default function AdminPages() {
     return pages.filter(p => p.id !== editingPage?.id);
   };
 
+  const togglePublishStatus = async (page: Page) => {
+    try {
+      const { error } = await supabase
+        .from('pages')
+        .update({ is_published: !page.is_published })
+        .eq('id', page.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Berhasil',
+        description: page.is_published ? 'Halaman disimpan sebagai draft' : 'Halaman dipublikasikan',
+      });
+
+      fetchPages();
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const openPreview = (page: Page) => {
+    // Use preview mode query param for draft pages
+    const url = page.is_published 
+      ? `/halaman/${page.slug}` 
+      : `/halaman/${page.slug}?preview=true`;
+    window.open(url, '_blank');
+  };
+
   if (loading) {
     return <div className="p-6">Loading...</div>;
   }
 
   return (
+    <TooltipProvider>
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -437,40 +477,69 @@ export default function AdminPages() {
                     <TableCell className="text-muted-foreground">/{page.slug}</TableCell>
                     <TableCell>{getParentTitle(page.parent_id)}</TableCell>
                     <TableCell>
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        page.is_published 
-                          ? 'bg-primary/10 text-primary' 
-                          : 'bg-muted text-muted-foreground'
-                      }`}>
+                      <Badge variant={page.is_published ? 'default' : 'secondary'}>
                         {page.is_published ? 'Published' : 'Draft'}
-                      </span>
+                      </Badge>
                     </TableCell>
                     <TableCell>{page.position}</TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          asChild
-                        >
-                          <a href={`/page/${page.slug}`} target="_blank" rel="noopener noreferrer">
-                            <Eye className="h-4 w-4" />
-                          </a>
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => openEditDialog(page)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(page.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                      <div className="flex justify-end gap-1">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => openPreview(page)}
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {page.is_published ? 'Lihat Halaman' : 'Preview Draft'}
+                          </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => togglePublishStatus(page)}
+                            >
+                              {page.is_published ? (
+                                <EyeOff className="h-4 w-4" />
+                              ) : (
+                                <Eye className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {page.is_published ? 'Jadikan Draft' : 'Publikasikan'}
+                          </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => openEditDialog(page)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Edit</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDelete(page.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Hapus</TooltipContent>
+                        </Tooltip>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -481,5 +550,6 @@ export default function AdminPages() {
         </CardContent>
       </Card>
     </div>
+    </TooltipProvider>
   );
 }
