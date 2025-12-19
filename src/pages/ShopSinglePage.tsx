@@ -99,7 +99,7 @@ const ShopSinglePage = () => {
               )}
             </div>
             <div>
-              <span className="text-sm font-medium text-primary bg-primary/10 px-3 py-1 rounded-full">{product.category}</span>
+              <span className="text-sm font-medium text-secondary-foreground dark:text-secondary bg-secondary/20 px-3 py-1 rounded-full">{product.category}</span>
               <h1 className="text-3xl font-bold text-foreground mt-4 mb-2">{product.name}</h1>
               <p className="text-2xl font-bold text-primary mb-2">Rp {product.price.toLocaleString('id-ID')}</p>
               {product.stock !== null && (

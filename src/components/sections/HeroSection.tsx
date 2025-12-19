@@ -25,8 +25,8 @@ export function HeroSection() {
       <div className="relative z-10 container-section text-center py-20">
         <div className="max-w-4xl mx-auto space-y-8 animate-fade-up">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium">
-            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/20 border border-secondary/30 text-secondary-foreground dark:text-secondary text-sm font-medium">
+            <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
             Pendaftaran Santri Baru Dibuka
           </div>
 
@@ -34,7 +34,7 @@ export function HeroSection() {
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-foreground leading-tight">
             Membangun Generasi{" "}
             <span className="text-primary">Qurani</span>,{" "}
-            <span className="text-primary">Cendekia</span>, dan{" "}
+            <span className="text-secondary dark:text-secondary">Cendekia</span>, dan{" "}
             <span className="text-primary">Berakhlak Mulia</span>
           </h1>
 
@@ -55,7 +55,7 @@ export function HeroSection() {
             <Button 
               variant="outline" 
               size="lg" 
-              className="w-full sm:w-auto text-lg px-8 py-6"
+              className="w-full sm:w-auto text-lg px-8 py-6 border-secondary/50 hover:bg-secondary/10 hover:border-secondary"
               onClick={scrollToAbout}
             >
               Pelajari Lebih Lanjut
@@ -65,12 +65,12 @@ export function HeroSection() {
           {/* Stats */}
           <div className="grid grid-cols-3 gap-6 pt-12 max-w-xl mx-auto">
             {[
-              { number: "500+", label: "Alumni" },
-              { number: "50+", label: "Santri Aktif" },
-              { number: "10+", label: "Tahun Berdiri" },
+              { number: "500+", label: "Alumni", highlight: false },
+              { number: "50+", label: "Santri Aktif", highlight: true },
+              { number: "10+", label: "Tahun Berdiri", highlight: false },
             ].map((stat) => (
               <div key={stat.label} className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-primary">{stat.number}</div>
+                <div className={`text-2xl md:text-3xl font-bold ${stat.highlight ? 'text-secondary dark:text-secondary' : 'text-primary'}`}>{stat.number}</div>
                 <div className="text-sm text-muted-foreground">{stat.label}</div>
               </div>
             ))}

@@ -157,7 +157,7 @@ const BlogSinglePage = () => {
           )}
 
           <header className="mb-8">
-            <span className="text-sm font-medium text-primary bg-primary/10 px-3 py-1 rounded-full">{post.category}</span>
+            <span className="text-sm font-medium text-secondary-foreground dark:text-secondary bg-secondary/20 px-3 py-1 rounded-full">{post.category}</span>
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mt-4 mb-4">{post.title}</h1>
             <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground border-b border-border pb-6">
               <span className="flex items-center gap-2"><Calendar className="w-4 h-4" />{formatDate(post.published_at)}</span>

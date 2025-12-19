@@ -82,7 +82,7 @@ const ShopPage = () => {
                       )}
                     </div>
                     <div className="p-4">
-                      <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded">{product.category}</span>
+                      <span className="text-xs font-medium text-secondary-foreground dark:text-secondary bg-secondary/20 px-2 py-1 rounded">{product.category}</span>
                       <h2 className="font-semibold text-foreground mt-2 mb-1 group-hover:text-primary transition-colors">{product.name}</h2>
                       <p className="text-lg font-bold text-primary mb-3">Rp {product.price.toLocaleString('id-ID')}</p>
                       <Button size="sm" className="w-full">

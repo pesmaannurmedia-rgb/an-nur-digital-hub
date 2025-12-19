@@ -90,7 +90,7 @@ const BlogPage = () => {
                       )}
                     </div>
                     <div className="p-5">
-                      <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded">{post.category}</span>
+                      <span className="text-xs font-medium text-secondary-foreground dark:text-secondary bg-secondary/20 px-2 py-1 rounded">{post.category}</span>
                       <h2 className="font-semibold text-foreground mt-3 mb-2 group-hover:text-primary transition-colors">{post.title}</h2>
                       <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{post.excerpt || 'Klik untuk membaca artikel lengkap...'}</p>
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
