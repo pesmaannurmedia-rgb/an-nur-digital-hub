@@ -86,9 +86,16 @@ interface Category {
   slug: string;
 }
 
+interface Author {
+  id: string;
+  name: string;
+  image_url: string | null;
+}
+
 export default function AdminPosts() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [authors, setAuthors] = useState<Author[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
@@ -113,6 +120,7 @@ export default function AdminPosts() {
   useEffect(() => {
     fetchPosts();
     fetchCategories();
+    fetchAuthors();
   }, []);
 
   const fetchCategories = async () => {
@@ -127,6 +135,21 @@ export default function AdminPosts() {
       setCategories(data || []);
     } catch (error) {
       console.error('Error fetching categories:', error);
+    }
+  };
+
+  const fetchAuthors = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('authors')
+        .select('id, name, image_url')
+        .eq('is_active', true)
+        .order('name');
+
+      if (error) throw error;
+      setAuthors(data || []);
+    } catch (error) {
+      console.error('Error fetching authors:', error);
     }
   };
 
@@ -168,7 +191,7 @@ export default function AdminPosts() {
       excerpt: '',
       content: '',
       category: categories[0]?.name || '',
-      author: 'Admin',
+      author: authors[0]?.name || 'Admin',
       image_url: '',
       is_published: false,
       published_at: null,
@@ -358,9 +381,20 @@ export default function AdminPosts() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Penulis</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Pilih penulis" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {authors.map((author) => (
+                              <SelectItem key={author.id} value={author.name}>
+                                {author.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}

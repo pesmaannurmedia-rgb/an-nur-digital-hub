@@ -9,6 +9,7 @@ import {
   LogOut,
   BookOpen,
   Tag,
+  UserPen,
 } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -31,6 +32,7 @@ const menuItems = [
   { title: 'Dashboard', url: '/admin', icon: LayoutDashboard },
   { title: 'Produk', url: '/admin/products', icon: ShoppingBag },
   { title: 'Artikel', url: '/admin/posts', icon: FileText },
+  { title: 'Penulis', url: '/admin/authors', icon: UserPen },
   { title: 'Kategori', url: '/admin/categories', icon: Tag },
   { title: 'Pengumuman', url: '/admin/announcements', icon: Bell },
   { title: 'Pesan Masuk', url: '/admin/messages', icon: MessageSquare },

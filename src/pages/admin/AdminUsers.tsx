@@ -21,6 +21,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Plus, Trash2, Loader2, Shield } from 'lucide-react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
@@ -32,6 +33,7 @@ interface UserRole {
   created_at: string;
   profile?: {
     full_name: string | null;
+    avatar_url: string | null;
   } | null;
   email?: string;
 }
@@ -67,7 +69,7 @@ export default function AdminUsers() {
       const userIds = data?.map(ur => ur.user_id) || [];
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('user_id, full_name')
+        .select('user_id, full_name, avatar_url')
         .in('user_id', userIds);
 
       const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
@@ -164,6 +166,11 @@ export default function AdminUsers() {
     }
   };
 
+  const getInitials = (name: string | null) => {
+    if (!name) return 'AD';
+    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -246,13 +253,21 @@ export default function AdminUsers() {
                 userRoles.map((userRole) => (
                   <TableRow key={userRole.id}>
                     <TableCell>
-                      <div>
-                        <p className="font-medium">
-                          {userRole.profile?.full_name || 'Nama tidak tersedia'}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {userRole.user_id === user?.id ? '(Anda)' : ''}
-                        </p>
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          <AvatarImage src={userRole.profile?.avatar_url || undefined} />
+                          <AvatarFallback className="bg-primary text-primary-foreground">
+                            {getInitials(userRole.profile?.full_name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">
+                            {userRole.profile?.full_name || 'Nama tidak tersedia'}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {userRole.user_id === user?.id ? '(Anda)' : ''}
+                          </p>
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
