@@ -47,7 +47,8 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Pencil, Trash2, Loader2, CalendarIcon } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, CalendarIcon, Eye } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -61,6 +62,7 @@ const postSchema = z.object({
   category: z.string().min(1, 'Kategori wajib dipilih'),
   author: z.string().min(1, 'Penulis wajib diisi'),
   image_url: z.string().optional().or(z.literal('')),
+  image_caption: z.string().optional().or(z.literal('')),
   is_published: z.boolean(),
   published_at: z.date().optional().nullable(),
 });
@@ -76,6 +78,7 @@ interface Post {
   category: string;
   author: string;
   image_url: string | null;
+  image_caption: string | null;
   is_published: boolean | null;
   published_at: string | null;
   created_at: string;
@@ -101,6 +104,7 @@ export default function AdminPosts() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState('edit');
   const { toast } = useToast();
 
   const form = useForm<PostFormValues>({
@@ -113,6 +117,7 @@ export default function AdminPosts() {
       category: '',
       author: 'Admin',
       image_url: '',
+      image_caption: '',
       is_published: false,
       published_at: null,
     },
@@ -186,6 +191,7 @@ export default function AdminPosts() {
 
   const openCreateDialog = () => {
     setEditingPost(null);
+    setActiveTab('edit');
     form.reset({
       title: '',
       slug: '',
@@ -194,6 +200,7 @@ export default function AdminPosts() {
       category: categories[0]?.name || '',
       author: authors[0]?.name || 'Admin',
       image_url: '',
+      image_caption: '',
       is_published: false,
       published_at: null,
     });
@@ -202,6 +209,7 @@ export default function AdminPosts() {
 
   const openEditDialog = (post: Post) => {
     setEditingPost(post);
+    setActiveTab('edit');
     form.reset({
       title: post.title,
       slug: post.slug,
@@ -210,6 +218,7 @@ export default function AdminPosts() {
       category: post.category,
       author: post.author,
       image_url: post.image_url || '',
+      image_caption: post.image_caption || '',
       is_published: post.is_published ?? false,
       published_at: post.published_at ? new Date(post.published_at) : null,
     });
@@ -234,6 +243,7 @@ export default function AdminPosts() {
             category: values.category,
             author: values.author,
             image_url: values.image_url || null,
+            image_caption: values.image_caption || null,
             is_published: values.is_published,
             published_at: publishedAt,
           })
@@ -250,6 +260,7 @@ export default function AdminPosts() {
           category: values.category,
           author: values.author,
           image_url: values.image_url || null,
+          image_caption: values.image_caption || null,
           is_published: values.is_published,
           published_at: publishedAt,
         }]);
@@ -306,12 +317,26 @@ export default function AdminPosts() {
               Tambah Artikel
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {editingPost ? 'Edit Artikel' : 'Tambah Artikel Baru'}
               </DialogTitle>
             </DialogHeader>
+            
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="edit">
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Edit
+                </TabsTrigger>
+                <TabsTrigger value="preview">
+                  <Eye className="mr-2 h-4 w-4" />
+                  Preview
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="edit" className="mt-4">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
@@ -462,6 +487,26 @@ export default function AdminPosts() {
 
                 <FormField
                   control={form.control}
+                  name="image_caption"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Keterangan Gambar (Opsional)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Contoh: Foto oleh Ahmad / Ilustrasi: Budi Santoso" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <p className="text-xs text-muted-foreground">
+                        Untuk memberi kredit kepada fotografer atau ilustrator
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name="excerpt"
                   render={({ field }) => (
                     <FormItem>
@@ -525,6 +570,59 @@ export default function AdminPosts() {
                 </div>
               </form>
             </Form>
+              </TabsContent>
+              
+              <TabsContent value="preview" className="mt-4">
+                <div className="border rounded-lg overflow-hidden">
+                  {/* Preview Header */}
+                  {form.watch('image_url') && (
+                    <div className="relative">
+                      <img
+                        src={form.watch('image_url')}
+                        alt={form.watch('title')}
+                        className="w-full h-64 object-cover"
+                      />
+                      {form.watch('image_caption') && (
+                        <p className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-sm px-4 py-2">
+                          {form.watch('image_caption')}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  
+                  <div className="p-6 space-y-4">
+                    {/* Category & Date */}
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <Badge variant="outline">{form.watch('category') || 'Kategori'}</Badge>
+                      <span>{format(form.watch('published_at') || new Date(), 'd MMMM yyyy', { locale: localeId })}</span>
+                    </div>
+                    
+                    {/* Title */}
+                    <h1 className="text-3xl font-bold">
+                      {form.watch('title') || 'Judul Artikel'}
+                    </h1>
+                    
+                    {/* Author */}
+                    <p className="text-muted-foreground">
+                      Oleh <span className="font-medium text-foreground">{form.watch('author') || 'Penulis'}</span>
+                    </p>
+                    
+                    {/* Excerpt */}
+                    {form.watch('excerpt') && (
+                      <p className="text-lg text-muted-foreground italic border-l-4 border-primary pl-4">
+                        {form.watch('excerpt')}
+                      </p>
+                    )}
+                    
+                    {/* Content */}
+                    <div 
+                      className="prose prose-lg dark:prose-invert max-w-none"
+                      dangerouslySetInnerHTML={{ __html: form.watch('content') || '<p class="text-muted-foreground">Konten artikel akan muncul di sini...</p>' }}
+                    />
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
           </DialogContent>
         </Dialog>
       </div>
