@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
+import { IslamicPattern } from "@/components/ui/IslamicPattern";
 
 const contactSchema = z.object({
   name: z.string().trim().min(2, "Nama minimal 2 karakter").max(100, "Nama maksimal 100 karakter"),
@@ -62,8 +63,13 @@ export function ContactSection() {
   const whatsappLink = "https://wa.me/6281234567890?text=Assalamu'alaikum,%20saya%20ingin%20bertanya%20tentang%20Pesantren%20An-Nur";
 
   return (
-    <section id="kontak" className="py-20 bg-background">
-      <div className="container-section">
+    <section id="kontak" className="relative py-20 bg-surface overflow-hidden">
+      {/* Islamic Pattern Background */}
+      <div className="absolute inset-0 pointer-events-none">
+        <IslamicPattern className="w-full h-full text-primary opacity-30 dark:opacity-20" />
+      </div>
+
+      <div className="relative container-section">
         {/* Header */}
         <div className="text-center mb-12">
           <span className="text-primary font-medium text-sm uppercase tracking-wider">
