@@ -1,10 +1,18 @@
 import { useState } from "react";
-import { MapPin, Phone, Mail, Send, MessageSquare } from "lucide-react";
+import { MapPin, Phone, Mail, Send, MessageSquare, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { z } from "zod";
+
+const contactSchema = z.object({
+  name: z.string().trim().min(2, "Nama minimal 2 karakter").max(100, "Nama maksimal 100 karakter"),
+  contact: z.string().trim().min(5, "Email/No WA minimal 5 karakter").max(100, "Email/No WA maksimal 100 karakter"),
+  message: z.string().trim().min(10, "Pesan minimal 10 karakter").max(1000, "Pesan maksimal 1000 karakter"),
+});
 
 export function ContactSection() {
   const [isLoading, setIsLoading] = useState(false);
@@ -13,12 +21,42 @@ export function ContactSection() {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    toast.success("Pesan berhasil dikirim! Kami akan segera menghubungi Anda.");
-    (e.target as HTMLFormElement).reset();
-    setIsLoading(false);
+    const formData = new FormData(e.currentTarget);
+    const data = {
+      name: formData.get('name') as string,
+      contact: formData.get('contact') as string,
+      message: formData.get('message') as string,
+    };
+
+    // Validate input
+    const result = contactSchema.safeParse(data);
+    if (!result.success) {
+      toast.error(result.error.errors[0].message);
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      // Determine if contact is email or phone
+      const isEmail = data.contact.includes('@');
+      
+      const { error } = await supabase.from('contact_messages').insert([{
+        name: data.name,
+        email: isEmail ? data.contact : null,
+        phone: !isEmail ? data.contact : null,
+        message: data.message,
+      }]);
+
+      if (error) throw error;
+
+      toast.success("Pesan berhasil dikirim! Kami akan segera menghubungi Anda.");
+      (e.target as HTMLFormElement).reset();
+    } catch (error) {
+      console.error('Error submitting contact form:', error);
+      toast.error("Gagal mengirim pesan. Silakan coba lagi.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const whatsappLink = "https://wa.me/6281234567890?text=Assalamu'alaikum,%20saya%20ingin%20bertanya%20tentang%20Pesantren%20An-Nur";
@@ -50,6 +88,7 @@ export function ContactSection() {
                   name="name" 
                   placeholder="Masukkan nama Anda" 
                   required 
+                  maxLength={100}
                 />
               </div>
 
@@ -60,6 +99,7 @@ export function ContactSection() {
                   name="contact" 
                   placeholder="email@example.com atau 08123456789" 
                   required 
+                  maxLength={100}
                 />
               </div>
 
@@ -71,12 +111,16 @@ export function ContactSection() {
                   placeholder="Tulis pesan Anda di sini..." 
                   rows={4}
                   required 
+                  maxLength={1000}
                 />
               </div>
 
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (
-                  "Mengirim..."
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Mengirim...
+                  </>
                 ) : (
                   <>
                     <Send className="w-4 h-4 mr-2" />

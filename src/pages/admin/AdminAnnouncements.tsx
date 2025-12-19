@@ -124,21 +124,26 @@ export default function AdminAnnouncements() {
   const onSubmit = async (values: AnnouncementFormValues) => {
     setIsSubmitting(true);
     try {
-      const announcementData = {
-        ...values,
-        link: values.link || null,
-      };
-
       if (editingAnnouncement) {
         const { error } = await supabase
           .from('announcements')
-          .update(announcementData)
+          .update({
+            title: values.title,
+            content: values.content || null,
+            link: values.link || null,
+            is_active: values.is_active,
+          })
           .eq('id', editingAnnouncement.id);
 
         if (error) throw error;
         toast({ title: 'Berhasil', description: 'Pengumuman berhasil diperbarui' });
       } else {
-        const { error } = await supabase.from('announcements').insert([announcementData]);
+        const { error } = await supabase.from('announcements').insert([{
+          title: values.title,
+          content: values.content || null,
+          link: values.link || null,
+          is_active: values.is_active,
+        }]);
 
         if (error) throw error;
         toast({ title: 'Berhasil', description: 'Pengumuman berhasil ditambahkan' });

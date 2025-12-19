@@ -1,35 +1,63 @@
-import { Calendar, ArrowRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Calendar, ArrowRight, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
+import { id } from "date-fns/locale";
 
-const announcements = [
-  {
-    id: 1,
-    date: "15 Desember 2024",
-    title: "Pendaftaran Santri Baru Periode Januari 2025",
-    excerpt: "Dibuka pendaftaran santri baru untuk mahasiswa yang ingin bergabung.",
-  },
-  {
-    id: 2,
-    date: "10 Desember 2024",
-    title: "Jadwal Kajian Kitab Bulughul Maram",
-    excerpt: "Kajian rutin setiap Senin dan Kamis ba'da Maghrib bersama Ustadz Ahmad.",
-  },
-  {
-    id: 3,
-    date: "5 Desember 2024",
-    title: "Wisuda Tahfidz Angkatan 2024",
-    excerpt: "Alhamdulillah 15 santri telah menyelesaikan hafalan 30 juz Al-Quran.",
-  },
-  {
-    id: 4,
-    date: "1 Desember 2024",
-    title: "Bakti Sosial Akhir Tahun",
-    excerpt: "Santunan yatim dan dhuafa di sekitar pesantren bersama seluruh santri.",
-  },
-];
+interface Announcement {
+  id: string;
+  title: string;
+  content: string | null;
+  link: string | null;
+  published_at: string;
+}
 
 export function AnnouncementsSection() {
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchAnnouncements();
+  }, []);
+
+  const fetchAnnouncements = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('announcements')
+        .select('id, title, content, link, published_at')
+        .eq('is_active', true)
+        .order('published_at', { ascending: false })
+        .limit(5);
+
+      if (error) throw error;
+      setAnnouncements(data || []);
+    } catch (error) {
+      console.error('Error fetching announcements:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return format(new Date(dateString), 'd MMMM yyyy', { locale: id });
+  };
+
+  if (loading) {
+    return (
+      <section className="py-20 bg-surface">
+        <div className="container-section flex justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </section>
+    );
+  }
+
+  if (announcements.length === 0) {
+    return null;
+  }
+
   return (
     <section className="py-20 bg-surface">
       <div className="container-section">
@@ -60,20 +88,33 @@ export function AnnouncementsSection() {
               <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Calendar className="w-4 h-4 text-primary" />
-                  <time>{item.date}</time>
+                  <time>{formatDate(item.published_at)}</time>
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
                     {item.title}
                   </h3>
-                  <p className="text-muted-foreground text-sm mt-1">{item.excerpt}</p>
+                  {item.content && (
+                    <p className="text-muted-foreground text-sm mt-1 line-clamp-1">{item.content}</p>
+                  )}
                 </div>
-                <Link 
-                  to="/blog" 
-                  className="text-primary hover:underline text-sm font-medium whitespace-nowrap"
-                >
-                  Lihat Detail →
-                </Link>
+                {item.link ? (
+                  <a 
+                    href={item.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline text-sm font-medium whitespace-nowrap"
+                  >
+                    Lihat Detail →
+                  </a>
+                ) : (
+                  <Link 
+                    to="/blog" 
+                    className="text-primary hover:underline text-sm font-medium whitespace-nowrap"
+                  >
+                    Lihat Detail →
+                  </Link>
+                )}
               </div>
             </article>
           ))}
