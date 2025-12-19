@@ -135,19 +135,10 @@ const BlogSinglePage = () => {
             </div>
           </header>
 
-          <div className="prose prose-lg max-w-none dark:prose-invert">
-            {post.content ? (
-              post.content.split('\n').map((paragraph, index) => (
-                paragraph.trim() && (
-                  <p key={index} className="text-muted-foreground leading-relaxed mb-4">
-                    {paragraph}
-                  </p>
-                )
-              ))
-            ) : (
-              <p className="text-muted-foreground">Konten artikel tidak tersedia.</p>
-            )}
-          </div>
+          <div 
+            className="prose prose-lg max-w-none dark:prose-invert prose-headings:text-foreground prose-p:text-muted-foreground prose-li:text-muted-foreground prose-strong:text-foreground"
+            dangerouslySetInnerHTML={{ __html: post.content || '<p>Konten artikel tidak tersedia.</p>' }}
+          />
 
           {relatedPosts.length > 0 && (
             <div className="mt-12 pt-8 border-t border-border">
