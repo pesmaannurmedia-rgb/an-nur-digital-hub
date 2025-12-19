@@ -21,6 +21,7 @@ import {
   Database,
   ImageIcon,
   Cog,
+  History,
 } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -87,6 +88,7 @@ const menuGroups = [
     items: [
       { title: 'Pengaturan Website', url: '/admin/settings', icon: Cog },
       { title: 'Kelola Admin', url: '/admin/users', icon: Users },
+      { title: 'Activity Log', url: '/admin/activity-log', icon: History },
     ],
   },
 ];

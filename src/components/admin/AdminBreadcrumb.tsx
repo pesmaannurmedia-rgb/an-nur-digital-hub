@@ -24,6 +24,7 @@ const routeLabels: Record<string, { label: string; parent?: string }> = {
   '/admin/messages': { label: 'Pesan Masuk', parent: 'Komunikasi' },
   '/admin/settings': { label: 'Pengaturan Website', parent: 'Pengaturan' },
   '/admin/users': { label: 'Kelola Admin', parent: 'Pengaturan' },
+  '/admin/activity-log': { label: 'Activity Log', parent: 'Pengaturan' },
 };
 
 export function AdminBreadcrumb() {
