@@ -28,7 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Plus, Pencil, Trash2, FileText, ChevronRight, Eye, EyeOff, ExternalLink } from 'lucide-react';
+import { Plus, Pencil, Trash2, FileText, ChevronRight, Eye, EyeOff, ExternalLink, Copy } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   Tooltip,
