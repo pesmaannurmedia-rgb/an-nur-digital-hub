@@ -38,11 +38,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
+import { id as localeId } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
+import { ImageUpload } from '@/components/admin/ImageUpload';
 
 const postSchema = z.object({
   title: z.string().min(1, 'Judul wajib diisi'),
@@ -51,8 +59,9 @@ const postSchema = z.object({
   content: z.string().min(1, 'Konten wajib diisi'),
   category: z.string().min(1, 'Kategori wajib dipilih'),
   author: z.string().min(1, 'Penulis wajib diisi'),
-  image_url: z.string().url('URL gambar tidak valid').optional().or(z.literal('')),
+  image_url: z.string().optional().or(z.literal('')),
   is_published: z.boolean(),
+  published_at: z.date().optional().nullable(),
 });
 
 type PostFormValues = z.infer<typeof postSchema>;
@@ -71,10 +80,15 @@ interface Post {
   created_at: string;
 }
 
-const categories = ['Kajian', 'Pengumuman', 'Opini', 'Kegiatan', 'Lainnya'];
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+}
 
 export default function AdminPosts() {
   const [posts, setPosts] = useState<Post[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
@@ -88,16 +102,33 @@ export default function AdminPosts() {
       slug: '',
       excerpt: '',
       content: '',
-      category: 'Kajian',
+      category: '',
       author: 'Admin',
       image_url: '',
       is_published: false,
+      published_at: null,
     },
   });
 
   useEffect(() => {
     fetchPosts();
+    fetchCategories();
   }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('type', 'post')
+        .order('name');
+
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
 
   const fetchPosts = async () => {
     try {
@@ -136,10 +167,11 @@ export default function AdminPosts() {
       slug: '',
       excerpt: '',
       content: '',
-      category: 'Kajian',
+      category: categories[0]?.name || '',
       author: 'Admin',
       image_url: '',
       is_published: false,
+      published_at: null,
     });
     setIsDialogOpen(true);
   };
@@ -155,6 +187,7 @@ export default function AdminPosts() {
       author: post.author,
       image_url: post.image_url || '',
       is_published: post.is_published ?? false,
+      published_at: post.published_at ? new Date(post.published_at) : null,
     });
     setIsDialogOpen(true);
   };
@@ -162,6 +195,10 @@ export default function AdminPosts() {
   const onSubmit = async (values: PostFormValues) => {
     setIsSubmitting(true);
     try {
+      const publishedAt = values.is_published 
+        ? (values.published_at?.toISOString() || new Date().toISOString())
+        : null;
+
       if (editingPost) {
         const { error } = await supabase
           .from('posts')
@@ -174,7 +211,7 @@ export default function AdminPosts() {
             author: values.author,
             image_url: values.image_url || null,
             is_published: values.is_published,
-            published_at: values.is_published ? new Date().toISOString() : null,
+            published_at: publishedAt,
           })
           .eq('id', editingPost.id);
 
@@ -190,7 +227,7 @@ export default function AdminPosts() {
           author: values.author,
           image_url: values.image_url || null,
           is_published: values.is_published,
-          published_at: values.is_published ? new Date().toISOString() : null,
+          published_at: publishedAt,
         }]);
 
         if (error) throw error;
@@ -296,16 +333,16 @@ export default function AdminPosts() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Kategori</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue />
+                              <SelectValue placeholder="Pilih kategori" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             {categories.map((cat) => (
-                              <SelectItem key={cat} value={cat}>
-                                {cat}
+                              <SelectItem key={cat.id} value={cat.name}>
+                                {cat.name}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -332,12 +369,56 @@ export default function AdminPosts() {
 
                 <FormField
                   control={form.control}
+                  name="published_at"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Tanggal Publikasi</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "d MMMM yyyy", { locale: localeId })
+                              ) : (
+                                <span>Pilih tanggal</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value || undefined}
+                            onSelect={field.onChange}
+                            initialFocus
+                            className={cn("p-3 pointer-events-auto")}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name="image_url"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>URL Gambar</FormLabel>
+                      <FormLabel>Gambar Artikel</FormLabel>
                       <FormControl>
-                        <Input placeholder="https://..." {...field} />
+                        <ImageUpload
+                          value={field.value}
+                          onChange={field.onChange}
+                          bucket="post-images"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -439,9 +520,18 @@ export default function AdminPosts() {
                 posts.map((post) => (
                   <TableRow key={post.id}>
                     <TableCell>
-                      <div>
-                        <p className="font-medium">{post.title}</p>
-                        <p className="text-sm text-muted-foreground">/{post.slug}</p>
+                      <div className="flex items-center gap-3">
+                        {post.image_url && (
+                          <img
+                            src={post.image_url}
+                            alt={post.title}
+                            className="h-10 w-10 rounded-lg object-cover"
+                          />
+                        )}
+                        <div>
+                          <p className="font-medium">{post.title}</p>
+                          <p className="text-sm text-muted-foreground">/{post.slug}</p>
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>{post.category}</TableCell>
@@ -452,7 +542,7 @@ export default function AdminPosts() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {format(new Date(post.created_at), 'd MMM yyyy', { locale: id })}
+                      {format(new Date(post.published_at || post.created_at), 'd MMM yyyy', { locale: localeId })}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
