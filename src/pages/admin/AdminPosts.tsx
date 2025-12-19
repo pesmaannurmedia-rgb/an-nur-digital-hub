@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -47,7 +47,7 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Pencil, Trash2, Loader2, CalendarIcon, Eye } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, CalendarIcon, Eye, Save, Clock } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
@@ -96,6 +96,9 @@ interface Author {
   image_url: string | null;
 }
 
+const AUTOSAVE_KEY = 'post_draft_autosave';
+const AUTOSAVE_DELAY = 2000; // 2 seconds
+
 export default function AdminPosts() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -105,6 +108,9 @@ export default function AdminPosts() {
   const [editingPost, setEditingPost] = useState<Post | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState('edit');
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [hasDraft, setHasDraft] = useState(false);
+  const autosaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
   const form = useForm<PostFormValues>({
@@ -123,11 +129,96 @@ export default function AdminPosts() {
     },
   });
 
+  // Check for existing draft on mount
+  useEffect(() => {
+    const savedDraft = localStorage.getItem(AUTOSAVE_KEY);
+    if (savedDraft) {
+      setHasDraft(true);
+    }
+  }, []);
+
   useEffect(() => {
     fetchPosts();
     fetchCategories();
     fetchAuthors();
   }, []);
+
+  // Autosave function
+  const saveDraft = useCallback((values: PostFormValues) => {
+    if (!editingPost) { // Only autosave for new posts
+      const draftData = {
+        ...values,
+        published_at: values.published_at?.toISOString() || null,
+        savedAt: new Date().toISOString(),
+      };
+      localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(draftData));
+      setLastSaved(new Date());
+    }
+  }, [editingPost]);
+
+  // Watch form changes and autosave
+  useEffect(() => {
+    const subscription = form.watch((values) => {
+      if (!isDialogOpen || editingPost) return;
+      
+      // Clear existing timeout
+      if (autosaveTimeoutRef.current) {
+        clearTimeout(autosaveTimeoutRef.current);
+      }
+      
+      // Set new timeout for autosave
+      autosaveTimeoutRef.current = setTimeout(() => {
+        if (values.title || values.content) {
+          saveDraft(values as PostFormValues);
+        }
+      }, AUTOSAVE_DELAY);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+      if (autosaveTimeoutRef.current) {
+        clearTimeout(autosaveTimeoutRef.current);
+      }
+    };
+  }, [form, isDialogOpen, editingPost, saveDraft]);
+
+  // Clear draft after successful save
+  const clearDraft = useCallback(() => {
+    localStorage.removeItem(AUTOSAVE_KEY);
+    setLastSaved(null);
+    setHasDraft(false);
+  }, []);
+
+  // Restore draft
+  const restoreDraft = useCallback(() => {
+    const savedDraft = localStorage.getItem(AUTOSAVE_KEY);
+    if (savedDraft) {
+      try {
+        const draft = JSON.parse(savedDraft);
+        form.reset({
+          title: draft.title || '',
+          slug: draft.slug || '',
+          excerpt: draft.excerpt || '',
+          content: draft.content || '',
+          category: draft.category || categories[0]?.name || '',
+          author: draft.author || authors[0]?.name || 'Admin',
+          image_url: draft.image_url || '',
+          image_caption: draft.image_caption || '',
+          is_published: draft.is_published || false,
+          published_at: draft.published_at ? new Date(draft.published_at) : null,
+        });
+        setLastSaved(new Date(draft.savedAt));
+        toast({
+          title: 'Draft Dipulihkan',
+          description: 'Draft artikel sebelumnya berhasil dipulihkan',
+        });
+      } catch (e) {
+        console.error('Failed to restore draft:', e);
+      }
+    }
+    setHasDraft(false);
+    setIsDialogOpen(true);
+  }, [form, categories, authors, toast]);
 
   const fetchCategories = async () => {
     try {
@@ -190,8 +281,36 @@ export default function AdminPosts() {
   };
 
   const openCreateDialog = () => {
+    // Check if there's a saved draft
+    const savedDraft = localStorage.getItem(AUTOSAVE_KEY);
+    if (savedDraft) {
+      setHasDraft(true);
+      return; // Will show restore prompt instead
+    }
+    
     setEditingPost(null);
     setActiveTab('edit');
+    setLastSaved(null);
+    form.reset({
+      title: '',
+      slug: '',
+      excerpt: '',
+      content: '',
+      category: categories[0]?.name || '',
+      author: authors[0]?.name || 'Admin',
+      image_url: '',
+      image_caption: '',
+      is_published: false,
+      published_at: null,
+    });
+    setIsDialogOpen(true);
+  };
+
+  const startFreshPost = () => {
+    clearDraft();
+    setEditingPost(null);
+    setActiveTab('edit');
+    setLastSaved(null);
     form.reset({
       title: '',
       slug: '',
@@ -267,6 +386,7 @@ export default function AdminPosts() {
 
         if (error) throw error;
         toast({ title: 'Berhasil', description: 'Artikel berhasil ditambahkan' });
+        clearDraft(); // Clear draft after successful save
       }
 
       setIsDialogOpen(false);
@@ -305,12 +425,44 @@ export default function AdminPosts() {
 
   return (
     <div className="space-y-6">
+      {/* Draft Restore Dialog */}
+      <Dialog open={hasDraft} onOpenChange={setHasDraft}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-primary" />
+              Draft Tersimpan Ditemukan
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-muted-foreground">
+            Anda memiliki draft artikel yang belum selesai. Apakah ingin melanjutkan draft tersebut atau memulai artikel baru?
+          </p>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={startFreshPost}>
+              Mulai Baru
+            </Button>
+            <Button onClick={restoreDraft}>
+              Lanjutkan Draft
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-foreground">Kelola Artikel</h2>
           <p className="text-muted-foreground">Tambah, edit, atau hapus artikel blog</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open && !editingPost) {
+            // Save draft when closing dialog
+            const values = form.getValues();
+            if (values.title || values.content) {
+              saveDraft(values);
+            }
+          }
+        }}>
           <DialogTrigger asChild>
             <Button onClick={openCreateDialog}>
               <Plus className="mr-2 h-4 w-4" />
@@ -319,8 +471,14 @@ export default function AdminPosts() {
           </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>
-                {editingPost ? 'Edit Artikel' : 'Tambah Artikel Baru'}
+              <DialogTitle className="flex items-center justify-between">
+                <span>{editingPost ? 'Edit Artikel' : 'Tambah Artikel Baru'}</span>
+                {!editingPost && lastSaved && (
+                  <span className="flex items-center gap-1 text-xs font-normal text-muted-foreground">
+                    <Save className="h-3 w-3" />
+                    Tersimpan {format(lastSaved, 'HH:mm:ss')}
+                  </span>
+                )}
               </DialogTitle>
             </DialogHeader>
             
