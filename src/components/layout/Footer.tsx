@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { Phone, Mail, MapPin, Instagram, Youtube, Facebook } from "lucide-react";
 
-
 export function Footer() {
   const currentYear = new Date().getFullYear();
 
@@ -20,18 +19,18 @@ export function Footer() {
   ];
 
   return (
-    <footer className="relative bg-primary overflow-hidden">
-      <div className="relative container-section py-12 md:py-16">
+    <footer className="bg-card border-t border-border">
+      <div className="container-section py-12 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="lg:col-span-2">
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-full bg-primary-foreground flex items-center justify-center">
-                <span className="text-primary font-bold text-lg">ا</span>
+              <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+                <span className="text-primary-foreground font-bold text-lg">ا</span>
               </div>
-              <span className="font-bold text-xl text-primary-foreground">Pesantren Mahasiswa An-Nur</span>
+              <span className="font-bold text-xl text-foreground">Pesantren Mahasiswa An-Nur</span>
             </Link>
-            <p className="text-primary-foreground/80 mb-6 max-w-md">
+            <p className="text-muted-foreground mb-6 max-w-md">
               Membangun generasi Qurani, cendekia, dan berakhlak mulia. Pesantren khusus untuk mahasiswa dengan program tahfidz, kajian rutin, dan mentoring.
             </p>
             <div className="flex gap-3">
@@ -41,7 +40,7 @@ export function Footer() {
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-full bg-primary-foreground/10 flex items-center justify-center text-primary-foreground hover:bg-secondary hover:text-secondary-foreground transition-colors"
+                  className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
                   aria-label={social.label}
                 >
                   <social.icon className="w-5 h-5" />
@@ -52,13 +51,13 @@ export function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-semibold text-primary-foreground mb-4">Link Cepat</h4>
+            <h4 className="font-semibold text-foreground mb-4">Link Cepat</h4>
             <ul className="space-y-3">
               {quickLinks.map((link) => (
                 <li key={link.label}>
                   <Link
                     to={link.href}
-                    className="text-primary-foreground/80 hover:text-secondary transition-colors"
+                    className="text-muted-foreground hover:text-primary transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -69,27 +68,27 @@ export function Footer() {
 
           {/* Contact */}
           <div>
-            <h4 className="font-semibold text-primary-foreground mb-4">Kontak</h4>
+            <h4 className="font-semibold text-foreground mb-4">Kontak</h4>
             <ul className="space-y-3">
-              <li className="flex items-start gap-3 text-primary-foreground/80">
-                <MapPin className="w-5 h-5 text-secondary flex-shrink-0 mt-0.5" />
+              <li className="flex items-start gap-3 text-muted-foreground">
+                <MapPin className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                 <span>Jl. Pendidikan No. 123, Kelurahan Contoh, Kota, 12345</span>
               </li>
               <li>
                 <a
                   href="https://wa.me/6281234567890"
-                  className="flex items-center gap-3 text-primary-foreground/80 hover:text-secondary transition-colors"
+                  className="flex items-center gap-3 text-muted-foreground hover:text-primary transition-colors"
                 >
-                  <Phone className="w-5 h-5 text-secondary flex-shrink-0" />
+                  <Phone className="w-5 h-5 text-primary flex-shrink-0" />
                   <span>+62 812-3456-7890</span>
                 </a>
               </li>
               <li>
                 <a
                   href="mailto:info@pesantrenannur.id"
-                  className="flex items-center gap-3 text-primary-foreground/80 hover:text-secondary transition-colors"
+                  className="flex items-center gap-3 text-muted-foreground hover:text-primary transition-colors"
                 >
-                  <Mail className="w-5 h-5 text-secondary flex-shrink-0" />
+                  <Mail className="w-5 h-5 text-primary flex-shrink-0" />
                   <span>info@pesantrenannur.id</span>
                 </a>
               </li>
@@ -98,7 +97,7 @@ export function Footer() {
         </div>
 
         {/* Copyright */}
-        <div className="mt-12 pt-8 border-t border-primary-foreground/20 text-center text-primary-foreground/70 text-sm">
+        <div className="mt-12 pt-8 border-t border-border text-center text-muted-foreground text-sm">
           <p>© {currentYear} Pesantren Mahasiswa An-Nur. Hak Cipta Dilindungi.</p>
         </div>
       </div>

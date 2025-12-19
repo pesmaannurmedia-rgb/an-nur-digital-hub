@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 
-
 const contactSchema = z.object({
   name: z.string().trim().min(2, "Nama minimal 2 karakter").max(100, "Nama maksimal 100 karakter"),
   contact: z.string().trim().min(5, "Email/No WA minimal 5 karakter").max(100, "Email/No WA maksimal 100 karakter"),
@@ -63,8 +62,8 @@ export function ContactSection() {
   const whatsappLink = "https://wa.me/6281234567890?text=Assalamu'alaikum,%20saya%20ingin%20bertanya%20tentang%20Pesantren%20An-Nur";
 
   return (
-    <section id="kontak" className="relative py-20 bg-surface overflow-hidden">
-      <div className="relative container-section">
+    <section id="kontak" className="py-20 bg-background">
+      <div className="container-section">
         {/* Header */}
         <div className="text-center mb-12">
           <span className="text-primary font-medium text-sm uppercase tracking-wider">
