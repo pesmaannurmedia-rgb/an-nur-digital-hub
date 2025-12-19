@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -41,17 +41,18 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Pencil, Trash2, Loader2, Link2, ExternalLink, GripVertical } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, Link2, ExternalLink, ChevronRight, CornerDownRight } from 'lucide-react';
 
 const menuLinkSchema = z.object({
   title: z.string().min(1, 'Judul wajib diisi'),
-  url: z.string().url('URL tidak valid').min(1, 'URL wajib diisi'),
+  url: z.string().min(1, 'URL wajib diisi'),
   description: z.string().optional(),
   icon: z.string().optional(),
   group_name: z.string().min(1, 'Grup wajib dipilih'),
   position: z.coerce.number().min(0),
   is_external: z.boolean(),
   is_active: z.boolean(),
+  parent_id: z.string().nullable(),
 });
 
 type MenuLinkFormValues = z.infer<typeof menuLinkSchema>;
@@ -66,34 +67,41 @@ interface MenuLink {
   position: number;
   is_external: boolean | null;
   is_active: boolean | null;
+  parent_id: string | null;
   created_at: string;
 }
 
 const iconOptions = [
-  { value: 'BookOpen', label: 'Buku' },
-  { value: 'Globe', label: 'Globe' },
-  { value: 'GraduationCap', label: 'Akademik' },
-  { value: 'Library', label: 'Perpustakaan' },
-  { value: 'FileText', label: 'Dokumen' },
-  { value: 'Video', label: 'Video' },
-  { value: 'Music', label: 'Audio' },
-  { value: 'Image', label: 'Galeri' },
-  { value: 'Calendar', label: 'Kalender' },
-  { value: 'Mail', label: 'Email' },
-  { value: 'Phone', label: 'Telepon' },
-  { value: 'MapPin', label: 'Lokasi' },
-  { value: 'ShoppingBag', label: 'Toko' },
-  { value: 'Users', label: 'Komunitas' },
-  { value: 'Heart', label: 'Donasi' },
-  { value: 'Link', label: 'Link' },
+  { value: 'Home', label: '🏠 Beranda' },
+  { value: 'Building2', label: '🏛️ Profil' },
+  { value: 'History', label: '📜 Sejarah' },
+  { value: 'Target', label: '🎯 Visi Misi' },
+  { value: 'Users', label: '👥 Organisasi' },
+  { value: 'Building', label: '🏢 Fasilitas' },
+  { value: 'GraduationCap', label: '🎓 Pendidikan' },
+  { value: 'BookOpen', label: '📖 Tahfidz' },
+  { value: 'Book', label: '📚 Diniyah' },
+  { value: 'School', label: '🏫 Sekolah' },
+  { value: 'Trophy', label: '🏆 Ekskul' },
+  { value: 'UserPlus', label: '➕ Pendaftaran' },
+  { value: 'FileText', label: '📄 Dokumen' },
+  { value: 'Wallet', label: '💰 Biaya' },
+  { value: 'ClipboardList', label: '📋 Formulir' },
+  { value: 'Calendar', label: '📅 Jadwal' },
+  { value: 'Newspaper', label: '📰 Berita' },
+  { value: 'Image', label: '🖼️ Galeri' },
+  { value: 'CalendarDays', label: '📆 Agenda' },
+  { value: 'Bell', label: '🔔 Pengumuman' },
+  { value: 'Phone', label: '📞 Kontak' },
+  { value: 'MapPin', label: '📍 Lokasi' },
+  { value: 'Shield', label: '🛡️ Kebijakan' },
+  { value: 'FileCheck', label: '✅ Syarat' },
+  { value: 'Link', label: '🔗 Link' },
 ];
 
 const groupOptions = [
-  { value: 'main', label: 'Menu Utama' },
-  { value: 'akademik', label: 'Akademik' },
-  { value: 'media', label: 'Media' },
-  { value: 'layanan', label: 'Layanan' },
-  { value: 'footer', label: 'Footer' },
+  { value: 'main', label: 'Menu Utama (Header)' },
+  { value: 'footer', label: 'Menu Footer' },
 ];
 
 export default function AdminMenuLinks() {
@@ -113,8 +121,9 @@ export default function AdminMenuLinks() {
       icon: 'Link',
       group_name: 'main',
       position: 0,
-      is_external: true,
+      is_external: false,
       is_active: true,
+      parent_id: null,
     },
   });
 
@@ -144,6 +153,9 @@ export default function AdminMenuLinks() {
     }
   };
 
+  // Get parent menus (menus without parent_id)
+  const parentMenus = menuLinks.filter(link => !link.parent_id && link.group_name === 'main');
+
   const openCreateDialog = () => {
     setEditingLink(null);
     const maxPosition = Math.max(0, ...menuLinks.map(l => l.position)) + 1;
@@ -154,8 +166,9 @@ export default function AdminMenuLinks() {
       icon: 'Link',
       group_name: 'main',
       position: maxPosition,
-      is_external: true,
+      is_external: false,
       is_active: true,
+      parent_id: null,
     });
     setIsDialogOpen(true);
   };
@@ -169,8 +182,9 @@ export default function AdminMenuLinks() {
       icon: link.icon || 'Link',
       group_name: link.group_name || 'main',
       position: link.position,
-      is_external: link.is_external ?? true,
+      is_external: link.is_external ?? false,
       is_active: link.is_active ?? true,
+      parent_id: link.parent_id || null,
     });
     setIsDialogOpen(true);
   };
@@ -190,11 +204,12 @@ export default function AdminMenuLinks() {
             position: values.position,
             is_external: values.is_external,
             is_active: values.is_active,
+            parent_id: values.parent_id || null,
           })
           .eq('id', editingLink.id);
 
         if (error) throw error;
-        toast({ title: 'Berhasil', description: 'Menu link berhasil diperbarui' });
+        toast({ title: 'Berhasil', description: 'Menu berhasil diperbarui' });
       } else {
         const { error } = await supabase.from('menu_links').insert([{
           title: values.title,
@@ -205,10 +220,11 @@ export default function AdminMenuLinks() {
           position: values.position,
           is_external: values.is_external,
           is_active: values.is_active,
+          parent_id: values.parent_id || null,
         }]);
 
         if (error) throw error;
-        toast({ title: 'Berhasil', description: 'Menu link berhasil ditambahkan' });
+        toast({ title: 'Berhasil', description: 'Menu berhasil ditambahkan' });
       }
 
       setIsDialogOpen(false);
@@ -217,7 +233,7 @@ export default function AdminMenuLinks() {
       console.error('Error saving menu link:', error);
       toast({
         title: 'Error',
-        description: 'Gagal menyimpan menu link',
+        description: 'Gagal menyimpan menu',
         variant: 'destructive',
       });
     } finally {
@@ -226,18 +242,18 @@ export default function AdminMenuLinks() {
   };
 
   const deleteMenuLink = async (id: string) => {
-    if (!confirm('Yakin ingin menghapus menu link ini?')) return;
+    if (!confirm('Yakin ingin menghapus menu ini? Sub-menu di bawahnya juga akan terhapus.')) return;
 
     try {
       const { error } = await supabase.from('menu_links').delete().eq('id', id);
       if (error) throw error;
-      toast({ title: 'Berhasil', description: 'Menu link berhasil dihapus' });
+      toast({ title: 'Berhasil', description: 'Menu berhasil dihapus' });
       fetchMenuLinks();
     } catch (error) {
       console.error('Error deleting menu link:', error);
       toast({
         title: 'Error',
-        description: 'Gagal menghapus menu link',
+        description: 'Gagal menghapus menu',
         variant: 'destructive',
       });
     }
@@ -248,13 +264,82 @@ export default function AdminMenuLinks() {
     return group?.label || groupName || 'Lainnya';
   };
 
-  // Group links by group_name
-  const groupedLinks = menuLinks.reduce((acc, link) => {
-    const group = link.group_name || 'main';
-    if (!acc[group]) acc[group] = [];
-    acc[group].push(link);
-    return acc;
-  }, {} as Record<string, MenuLink[]>);
+  // Build hierarchical structure
+  const buildHierarchy = (links: MenuLink[], groupName: string) => {
+    const groupLinks = links.filter(l => l.group_name === groupName);
+    const parents = groupLinks.filter(l => !l.parent_id);
+    
+    return parents.map(parent => ({
+      ...parent,
+      children: groupLinks.filter(l => l.parent_id === parent.id).sort((a, b) => a.position - b.position)
+    })).sort((a, b) => a.position - b.position);
+  };
+
+  const mainMenuHierarchy = buildHierarchy(menuLinks, 'main');
+  const footerMenuHierarchy = buildHierarchy(menuLinks, 'footer');
+
+  const renderMenuRow = (link: MenuLink & { children?: MenuLink[] }, isChild = false) => (
+    <>
+      <TableRow key={link.id} className={isChild ? 'bg-muted/30' : ''}>
+        <TableCell className="text-muted-foreground">
+          {isChild ? (
+            <span className="flex items-center gap-1">
+              <CornerDownRight className="h-4 w-4 text-muted-foreground/50" />
+              {link.position}
+            </span>
+          ) : (
+            link.position
+          )}
+        </TableCell>
+        <TableCell>
+          <div className={isChild ? 'pl-4' : ''}>
+            <p className="font-medium flex items-center gap-2">
+              {!isChild && link.children && link.children.length > 0 && (
+                <Badge variant="outline" className="text-xs">
+                  {link.children.length} sub
+                </Badge>
+              )}
+              {link.title}
+            </p>
+            {link.description && (
+              <p className="text-sm text-muted-foreground line-clamp-1">
+                {link.description}
+              </p>
+            )}
+          </div>
+        </TableCell>
+        <TableCell>
+          <span className="text-sm text-muted-foreground truncate max-w-[200px] block">
+            {link.url}
+          </span>
+        </TableCell>
+        <TableCell>
+          <Badge variant={link.is_active ? 'default' : 'secondary'}>
+            {link.is_active ? 'Aktif' : 'Nonaktif'}
+          </Badge>
+        </TableCell>
+        <TableCell className="text-right">
+          <div className="flex justify-end gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => openEditDialog(link)}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => deleteMenuLink(link.id)}
+            >
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
+          </div>
+        </TableCell>
+      </TableRow>
+      {link.children?.map(child => renderMenuRow(child, true))}
+    </>
+  );
 
   return (
     <div className="space-y-6">
@@ -262,21 +347,23 @@ export default function AdminMenuLinks() {
         <div>
           <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <Link2 className="h-6 w-6" />
-            Kelola Menu & Link
+            Struktur Menu Website
           </h2>
-          <p className="text-muted-foreground">Kelola link navigasi ke website eksternal seperti OJS, E-Learning, dll</p>
+          <p className="text-muted-foreground">
+            Kelola menu utama dan sub-menu website Pesantren An-Nur
+          </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={openCreateDialog}>
               <Plus className="mr-2 h-4 w-4" />
-              Tambah Link
+              Tambah Menu
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                {editingLink ? 'Edit Menu Link' : 'Tambah Menu Link Baru'}
+                {editingLink ? 'Edit Menu' : 'Tambah Menu Baru'}
               </DialogTitle>
             </DialogHeader>
             <Form {...form}>
@@ -286,10 +373,13 @@ export default function AdminMenuLinks() {
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Judul</FormLabel>
+                      <FormLabel>Nama Menu</FormLabel>
                       <FormControl>
-                        <Input placeholder="Open Journal System" {...field} />
+                        <Input placeholder="Contoh: Tentang Kami" {...field} />
                       </FormControl>
+                      <FormDescription>
+                        Nama yang tampil di navigasi website
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -300,10 +390,13 @@ export default function AdminMenuLinks() {
                   name="url"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>URL</FormLabel>
+                      <FormLabel>Alamat Halaman (URL)</FormLabel>
                       <FormControl>
-                        <Input placeholder="https://ojs.example.com" {...field} />
+                        <Input placeholder="/halaman/tentang-kami atau https://..." {...field} />
                       </FormControl>
+                      <FormDescription>
+                        Gunakan "/" untuk halaman internal, "https://" untuk link eksternal
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -314,10 +407,17 @@ export default function AdminMenuLinks() {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Deskripsi (opsional)</FormLabel>
+                      <FormLabel>Deskripsi Menu</FormLabel>
                       <FormControl>
-                        <Textarea rows={2} placeholder="Deskripsi singkat tentang link ini..." {...field} />
+                        <Textarea 
+                          rows={2} 
+                          placeholder="Jelaskan isi halaman ini agar admin lain paham" 
+                          {...field} 
+                        />
                       </FormControl>
+                      <FormDescription>
+                        Penjelasan singkat fungsi menu (tidak tampil di website)
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -329,11 +429,11 @@ export default function AdminMenuLinks() {
                     name="icon"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Icon</FormLabel>
+                        <FormLabel>Ikon</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Pilih icon" />
+                              <SelectValue placeholder="Pilih ikon" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -354,11 +454,11 @@ export default function AdminMenuLinks() {
                     name="group_name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Grup Menu</FormLabel>
+                        <FormLabel>Lokasi Menu</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Pilih grup" />
+                              <SelectValue placeholder="Pilih lokasi" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -377,14 +477,50 @@ export default function AdminMenuLinks() {
 
                 <FormField
                   control={form.control}
+                  name="parent_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Menu Induk (untuk sub-menu)</FormLabel>
+                      <Select 
+                        onValueChange={(value) => field.onChange(value === 'none' ? null : value)} 
+                        value={field.value || 'none'}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Pilih menu induk" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">— Tidak ada (Menu Utama) —</SelectItem>
+                          {parentMenus
+                            .filter(m => m.id !== editingLink?.id)
+                            .map((menu) => (
+                              <SelectItem key={menu.id} value={menu.id}>
+                                {menu.title}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Kosongkan jika ini menu utama, pilih menu induk jika ini sub-menu
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name="position"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Urutan</FormLabel>
+                      <FormLabel>Urutan Tampil</FormLabel>
                       <FormControl>
                         <Input type="number" min={0} {...field} />
                       </FormControl>
-                      <FormDescription>Angka lebih kecil ditampilkan lebih dulu</FormDescription>
+                      <FormDescription>
+                        Angka kecil = tampil lebih dulu (1, 2, 3, dst)
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -396,9 +532,9 @@ export default function AdminMenuLinks() {
                   render={({ field }) => (
                     <FormItem className="flex items-center justify-between rounded-lg border p-4">
                       <div>
-                        <FormLabel className="text-base">Link Eksternal</FormLabel>
+                        <FormLabel className="text-base">Buka di Tab Baru</FormLabel>
                         <p className="text-sm text-muted-foreground">
-                          Buka di tab baru
+                          Aktifkan untuk link ke website luar
                         </p>
                       </div>
                       <FormControl>
@@ -414,9 +550,9 @@ export default function AdminMenuLinks() {
                   render={({ field }) => (
                     <FormItem className="flex items-center justify-between rounded-lg border p-4">
                       <div>
-                        <FormLabel className="text-base">Aktif</FormLabel>
+                        <FormLabel className="text-base">Tampilkan Menu</FormLabel>
                         <p className="text-sm text-muted-foreground">
-                          Tampilkan link di website
+                          Nonaktifkan untuk menyembunyikan sementara
                         </p>
                       </div>
                       <FormControl>
@@ -436,7 +572,7 @@ export default function AdminMenuLinks() {
                   </Button>
                   <Button type="submit" disabled={isSubmitting}>
                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {editingLink ? 'Simpan Perubahan' : 'Tambah Link'}
+                    {editingLink ? 'Simpan Perubahan' : 'Tambah Menu'}
                   </Button>
                 </div>
               </form>
@@ -445,91 +581,102 @@ export default function AdminMenuLinks() {
         </Dialog>
       </div>
 
+      {/* Guide Card */}
+      <Card className="border-primary/20 bg-primary/5">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">📋 Panduan Struktur Menu</CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm text-muted-foreground space-y-2">
+          <p><strong>Menu Utama:</strong> Menu yang tampil di bagian atas website (header)</p>
+          <p><strong>Sub-Menu:</strong> Menu yang muncul saat kursor diarahkan ke menu utama</p>
+          <p><strong>Menu Footer:</strong> Link yang tampil di bagian bawah website</p>
+          <p className="pt-2 text-xs">💡 Tips: Maksimal 2 tingkat (Menu → Sub-menu). Gunakan deskripsi agar admin lain paham fungsi tiap menu.</p>
+        </CardContent>
+      </Card>
+
       {loading ? (
         <div className="flex justify-center py-8">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
-      ) : Object.keys(groupedLinks).length === 0 ? (
+      ) : menuLinks.length === 0 ? (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
-            Belum ada menu link
+            Belum ada menu. Klik "Tambah Menu" untuk membuat struktur menu website.
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-6">
-          {Object.entries(groupedLinks).map(([groupName, links]) => (
-            <Card key={groupName}>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">{getGroupLabel(groupName)}</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
+          {/* Main Menu */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                🌐 Menu Utama (Header)
+              </CardTitle>
+              <CardDescription>
+                Menu yang tampil di bagian atas website
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-16">Urutan</TableHead>
+                    <TableHead>Nama Menu</TableHead>
+                    <TableHead>Alamat Halaman</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right w-24">Aksi</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {mainMenuHierarchy.length === 0 ? (
                     <TableRow>
-                      <TableHead className="w-10">#</TableHead>
-                      <TableHead>Judul</TableHead>
-                      <TableHead>URL</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Aksi</TableHead>
+                      <TableCell colSpan={5} className="text-center text-muted-foreground py-4">
+                        Belum ada menu utama
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {links.map((link) => (
-                      <TableRow key={link.id}>
-                        <TableCell className="text-muted-foreground">
-                          {link.position}
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium">{link.title}</p>
-                            {link.description && (
-                              <p className="text-sm text-muted-foreground line-clamp-1">
-                                {link.description}
-                              </p>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <a
-                            href={link.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-sm text-primary hover:underline"
-                          >
-                            <span className="truncate max-w-[200px]">{link.url}</span>
-                            {link.is_external && <ExternalLink className="h-3 w-3" />}
-                          </a>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={link.is_active ? 'default' : 'secondary'}>
-                            {link.is_active ? 'Aktif' : 'Nonaktif'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => openEditDialog(link)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => deleteMenuLink(link.id)}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          ))}
+                  ) : (
+                    mainMenuHierarchy.map(menu => renderMenuRow(menu))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          {/* Footer Menu */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                📎 Menu Footer
+              </CardTitle>
+              <CardDescription>
+                Link yang tampil di bagian bawah website
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-16">Urutan</TableHead>
+                    <TableHead>Nama Menu</TableHead>
+                    <TableHead>Alamat Halaman</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right w-24">Aksi</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {footerMenuHierarchy.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center text-muted-foreground py-4">
+                        Belum ada menu footer
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    footerMenuHierarchy.map(menu => renderMenuRow(menu))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>
