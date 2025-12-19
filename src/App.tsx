@@ -28,6 +28,7 @@ import AdminPages from "./pages/admin/AdminPages";
 import AdminGallery from "./pages/admin/AdminGallery";
 import AdminSiteSettings from "./pages/admin/AdminSiteSettings";
 import AdminMediaLibrary from "./pages/admin/AdminMediaLibrary";
+import AdminActivityLog from "./pages/admin/AdminActivityLog";
 
 const queryClient = new QueryClient();
 
@@ -63,6 +64,7 @@ const App = () => (
                 <Route path="gallery" element={<AdminGallery />} />
                 <Route path="settings" element={<AdminSiteSettings />} />
                 <Route path="media" element={<AdminMediaLibrary />} />
+                <Route path="activity-log" element={<AdminActivityLog />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

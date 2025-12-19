@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Helmet } from "react-helmet";
 import { ImageZoomModal } from "@/components/ImageZoomModal";
+import { RelatedProducts } from "@/components/RelatedProducts";
 
 interface Book {
   id: string;
@@ -433,6 +434,13 @@ const ShopSinglePage = () => {
               )}
             </div>
           </div>
+
+          {/* Related Products */}
+          <RelatedProducts
+            currentProductId={book.id}
+            category={book.category}
+            productType="book"
+          />
         </div>
       </article>
 
