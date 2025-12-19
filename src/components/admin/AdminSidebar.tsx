@@ -10,6 +10,7 @@ import {
   BookOpen,
   Tag,
   UserPen,
+  Link2,
 } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,7 @@ const menuItems = [
   { title: 'Artikel', url: '/admin/posts', icon: FileText },
   { title: 'Penulis', url: '/admin/authors', icon: UserPen },
   { title: 'Kategori', url: '/admin/categories', icon: Tag },
+  { title: 'Menu & Link', url: '/admin/menu-links', icon: Link2 },
   { title: 'Pengumuman', url: '/admin/announcements', icon: Bell },
   { title: 'Pesan Masuk', url: '/admin/messages', icon: MessageSquare },
   { title: 'Kelola Admin', url: '/admin/users', icon: Users },

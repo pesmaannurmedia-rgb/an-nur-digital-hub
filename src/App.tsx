@@ -21,6 +21,7 @@ import AdminMessages from "./pages/admin/AdminMessages";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminAuthors from "./pages/admin/AdminAuthors";
+import AdminMenuLinks from "./pages/admin/AdminMenuLinks";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,7 @@ const App = () => (
                 <Route path="users" element={<AdminUsers />} />
                 <Route path="categories" element={<AdminCategories />} />
                 <Route path="authors" element={<AdminAuthors />} />
+                <Route path="menu-links" element={<AdminMenuLinks />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
