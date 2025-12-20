@@ -50,6 +50,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { BulkActions, BulkSelectCheckbox } from '@/components/admin/BulkActions';
 
 const productSchema = z.object({
   name: z.string().min(1, 'Nama produk wajib diisi'),
@@ -96,7 +97,62 @@ export default function AdminProducts() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const { toast } = useToast();
+
+  // Bulk action handlers
+  const handleSelectAll = () => {
+    setSelectedIds(products.map(p => p.id));
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedIds([]);
+  };
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkDelete = async (ids: string[]) => {
+    try {
+      const { error } = await supabase.from('products').delete().in('id', ids);
+      if (error) throw error;
+      toast({ title: 'Berhasil', description: `${ids.length} produk berhasil dihapus` });
+      setSelectedIds([]);
+      fetchProducts();
+    } catch (error) {
+      console.error('Error bulk deleting:', error);
+      toast({ title: 'Error', description: 'Gagal menghapus produk', variant: 'destructive' });
+    }
+  };
+
+  const handleBulkActivate = async (ids: string[]) => {
+    try {
+      const { error } = await supabase.from('products').update({ is_active: true }).in('id', ids);
+      if (error) throw error;
+      toast({ title: 'Berhasil', description: `${ids.length} produk diaktifkan` });
+      setSelectedIds([]);
+      fetchProducts();
+    } catch (error) {
+      console.error('Error bulk activating:', error);
+      toast({ title: 'Error', description: 'Gagal mengaktifkan produk', variant: 'destructive' });
+    }
+  };
+
+  const handleBulkDeactivate = async (ids: string[]) => {
+    try {
+      const { error } = await supabase.from('products').update({ is_active: false }).in('id', ids);
+      if (error) throw error;
+      toast({ title: 'Berhasil', description: `${ids.length} produk dinonaktifkan` });
+      setSelectedIds([]);
+      fetchProducts();
+    } catch (error) {
+      console.error('Error bulk deactivating:', error);
+      toast({ title: 'Error', description: 'Gagal menonaktifkan produk', variant: 'destructive' });
+    }
+  };
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
@@ -325,13 +381,24 @@ export default function AdminProducts() {
             <h2 className="text-2xl font-bold text-foreground">Produk Umum</h2>
             <p className="text-muted-foreground">Kelola merchandise, souvenir, dan produk non-buku lainnya</p>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={openCreateDialog}>
-                <Plus className="mr-2 h-4 w-4" />
-                Tambah Produk
-              </Button>
-            </DialogTrigger>
+          <div className="flex items-center gap-2">
+            <BulkActions
+              selectedIds={selectedIds}
+              totalItems={products.length}
+              onSelectAll={handleSelectAll}
+              onDeselectAll={handleDeselectAll}
+              onBulkDelete={handleBulkDelete}
+              onBulkActivate={handleBulkActivate}
+              onBulkDeactivate={handleBulkDeactivate}
+              entityName="produk"
+            />
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={openCreateDialog}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Tambah Produk
+                </Button>
+              </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
@@ -570,7 +637,8 @@ export default function AdminProducts() {
                 </form>
               </Form>
             </DialogContent>
-          </Dialog>
+            </Dialog>
+          </div>
         </div>
 
         <Card>
@@ -578,6 +646,7 @@ export default function AdminProducts() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12"></TableHead>
                   <TableHead>Produk</TableHead>
                   <TableHead>Kategori</TableHead>
                   <TableHead>Harga</TableHead>
@@ -589,19 +658,26 @@ export default function AdminProducts() {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
+                    <TableCell colSpan={7} className="text-center py-8">
                       <Loader2 className="h-6 w-6 animate-spin mx-auto" />
                     </TableCell>
                   </TableRow>
                 ) : products.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       Belum ada produk. Klik "Tambah Produk" untuk menambahkan.
                     </TableCell>
                   </TableRow>
                 ) : (
                   products.map((product) => (
-                    <TableRow key={product.id}>
+                    <TableRow key={product.id} className={selectedIds.includes(product.id) ? 'bg-muted/50' : ''}>
+                      <TableCell>
+                        <BulkSelectCheckbox
+                          id={product.id}
+                          selectedIds={selectedIds}
+                          onToggle={handleToggleSelect}
+                        />
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           {product.image_url ? (
