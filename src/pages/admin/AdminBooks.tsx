@@ -50,6 +50,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { BulkActions, BulkSelectCheckbox } from '@/components/admin/BulkActions';
 
 const bookSchema = z.object({
   // Informasi Dasar
@@ -137,7 +138,62 @@ export default function AdminBooks() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const { toast } = useToast();
+
+  // Bulk action handlers
+  const handleSelectAll = () => {
+    setSelectedIds(books.map(b => b.id));
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedIds([]);
+  };
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkDelete = async (ids: string[]) => {
+    try {
+      const { error } = await supabase.from('products').delete().in('id', ids);
+      if (error) throw error;
+      toast({ title: 'Berhasil', description: `${ids.length} buku berhasil dihapus` });
+      setSelectedIds([]);
+      fetchBooks();
+    } catch (error) {
+      console.error('Error bulk deleting:', error);
+      toast({ title: 'Error', description: 'Gagal menghapus buku', variant: 'destructive' });
+    }
+  };
+
+  const handleBulkActivate = async (ids: string[]) => {
+    try {
+      const { error } = await supabase.from('products').update({ is_active: true }).in('id', ids);
+      if (error) throw error;
+      toast({ title: 'Berhasil', description: `${ids.length} buku diaktifkan` });
+      setSelectedIds([]);
+      fetchBooks();
+    } catch (error) {
+      console.error('Error bulk activating:', error);
+      toast({ title: 'Error', description: 'Gagal mengaktifkan buku', variant: 'destructive' });
+    }
+  };
+
+  const handleBulkDeactivate = async (ids: string[]) => {
+    try {
+      const { error } = await supabase.from('products').update({ is_active: false }).in('id', ids);
+      if (error) throw error;
+      toast({ title: 'Berhasil', description: `${ids.length} buku dinonaktifkan` });
+      setSelectedIds([]);
+      fetchBooks();
+    } catch (error) {
+      console.error('Error bulk deactivating:', error);
+      toast({ title: 'Error', description: 'Gagal menonaktifkan buku', variant: 'destructive' });
+    }
+  };
 
   const form = useForm<BookFormValues>({
     resolver: zodResolver(bookSchema),
@@ -425,13 +481,24 @@ export default function AdminBooks() {
             <h2 className="text-2xl font-bold text-foreground">Katalog Buku</h2>
             <p className="text-muted-foreground">Kelola buku akademik dengan metadata lengkap untuk Google Scholar</p>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={openCreateDialog}>
-                <Plus className="mr-2 h-4 w-4" />
-                Tambah Buku
-              </Button>
-            </DialogTrigger>
+          <div className="flex items-center gap-2">
+            <BulkActions
+              selectedIds={selectedIds}
+              totalItems={books.length}
+              onSelectAll={handleSelectAll}
+              onDeselectAll={handleDeselectAll}
+              onBulkDelete={handleBulkDelete}
+              onBulkActivate={handleBulkActivate}
+              onBulkDeactivate={handleBulkDeactivate}
+              entityName="buku"
+            />
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={openCreateDialog}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Tambah Buku
+                </Button>
+              </DialogTrigger>
             <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
@@ -941,6 +1008,7 @@ export default function AdminBooks() {
               </Form>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         {/* Info Card */}
@@ -961,6 +1029,7 @@ export default function AdminBooks() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12"></TableHead>
                   <TableHead>Buku</TableHead>
                   <TableHead>Penulis</TableHead>
                   <TableHead>Tahun</TableHead>
@@ -972,19 +1041,26 @@ export default function AdminBooks() {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
+                    <TableCell colSpan={7} className="text-center py-8">
                       <Loader2 className="h-6 w-6 animate-spin mx-auto" />
                     </TableCell>
                   </TableRow>
                 ) : books.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       Belum ada buku dalam katalog
                     </TableCell>
                   </TableRow>
                 ) : (
                   books.map((book) => (
-                    <TableRow key={book.id}>
+                    <TableRow key={book.id} className={selectedIds.includes(book.id) ? 'bg-muted/50' : ''}>
+                      <TableCell>
+                        <BulkSelectCheckbox
+                          id={book.id}
+                          selectedIds={selectedIds}
+                          onToggle={handleToggleSelect}
+                        />
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           {book.image_url && (
