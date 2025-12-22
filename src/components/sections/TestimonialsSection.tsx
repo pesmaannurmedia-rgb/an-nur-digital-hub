@@ -1,5 +1,19 @@
+import { useState, useEffect } from "react";
 import { Quote } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
+
+interface TestimonialsSettings {
+  testimonials_section_label: string;
+  testimonials_section_title: string;
+  testimonials_section_subtitle: string;
+}
+
+const defaultSettings: TestimonialsSettings = {
+  testimonials_section_label: "Testimoni",
+  testimonials_section_title: "Apa Kata Alumni & Santri",
+  testimonials_section_subtitle: "Cerita dan pengalaman dari mereka yang telah merasakan manfaat belajar di An-Nur",
+};
 
 const testimonials = [
   {
@@ -29,17 +43,45 @@ const testimonials = [
 ];
 
 export function TestimonialsSection() {
+  const [settings, setSettings] = useState<TestimonialsSettings>(defaultSettings);
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('key, value');
+
+      if (error) throw error;
+
+      if (data) {
+        const settingsMap: Partial<TestimonialsSettings> = {};
+        data.forEach((item) => {
+          if (item.key.startsWith('testimonials_') && item.value) {
+            settingsMap[item.key as keyof TestimonialsSettings] = item.value;
+          }
+        });
+        setSettings(prev => ({ ...prev, ...settingsMap }));
+      }
+    } catch (error) {
+      console.error('Error fetching testimonials settings:', error);
+    }
+  };
+
   return (
     <section className="py-20 bg-background">
       <div className="container-section">
         {/* Header */}
         <div className="text-center mb-12">
           <span className="text-primary font-medium text-sm uppercase tracking-wider">
-            Testimoni
+            {settings.testimonials_section_label}
           </span>
-          <h2 className="section-title mt-2">Apa Kata Alumni & Santri</h2>
+          <h2 className="section-title mt-2">{settings.testimonials_section_title}</h2>
           <p className="section-subtitle">
-            Cerita dan pengalaman dari mereka yang telah merasakan manfaat belajar di An-Nur
+            {settings.testimonials_section_subtitle}
           </p>
         </div>
 

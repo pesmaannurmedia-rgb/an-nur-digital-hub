@@ -22,6 +22,18 @@ interface MenuItem {
   children?: MenuItem[];
 }
 
+interface HeaderSettings {
+  header_logo_url: string;
+  header_site_name: string;
+  header_site_name_short: string;
+}
+
+const defaultHeaderSettings: HeaderSettings = {
+  header_logo_url: "",
+  header_site_name: "Pesantren Mahasiswa An-Nur",
+  header_site_name_short: "An-Nur",
+};
+
 // Fallback menu jika database kosong
 const fallbackMenu = [
   { id: '1', title: "Beranda", url: "/", is_external: false, parent_id: null, position: 1 },
@@ -33,12 +45,36 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [expandedMobile, setExpandedMobile] = useState<string | null>(null);
+  const [headerSettings, setHeaderSettings] = useState<HeaderSettings>(defaultHeaderSettings);
   const { theme, toggleTheme } = useThemeContext();
   const location = useLocation();
 
   useEffect(() => {
     fetchMenuItems();
+    fetchHeaderSettings();
   }, []);
+
+  const fetchHeaderSettings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('key, value');
+
+      if (error) throw error;
+
+      if (data) {
+        const settingsMap: Partial<HeaderSettings> = {};
+        data.forEach((item) => {
+          if (item.key.startsWith('header_') && item.value) {
+            settingsMap[item.key as keyof HeaderSettings] = item.value;
+          }
+        });
+        setHeaderSettings(prev => ({ ...prev, ...settingsMap }));
+      }
+    } catch (error) {
+      console.error('Error fetching header settings:', error);
+    }
+  };
 
   const fetchMenuItems = async () => {
     try {
@@ -257,11 +293,19 @@ export function Navbar() {
           to="/" 
           className="flex items-center gap-2 font-bold text-lg md:text-xl text-foreground hover:text-primary transition-colors"
         >
-          <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-lg">ا</span>
-          </div>
-          <span className="hidden sm:inline">Pesantren Mahasiswa An-Nur</span>
-          <span className="sm:hidden">An-Nur</span>
+          {headerSettings.header_logo_url ? (
+            <img 
+              src={headerSettings.header_logo_url} 
+              alt={headerSettings.header_site_name}
+              className="w-10 h-10 rounded-full object-cover"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+              <span className="text-primary-foreground font-bold text-lg">ا</span>
+            </div>
+          )}
+          <span className="hidden sm:inline">{headerSettings.header_site_name}</span>
+          <span className="sm:hidden">{headerSettings.header_site_name_short}</span>
         </Link>
 
         {/* Desktop Menu */}

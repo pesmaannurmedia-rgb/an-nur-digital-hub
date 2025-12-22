@@ -1,5 +1,19 @@
+import { useState, useEffect } from "react";
 import { BookOpen, Users, Heart, Globe, GraduationCap, Moon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
+
+interface ProgramsSettings {
+  programs_section_label: string;
+  programs_section_title: string;
+  programs_section_subtitle: string;
+}
+
+const defaultSettings: ProgramsSettings = {
+  programs_section_label: "Program Kami",
+  programs_section_title: "Program Unggulan",
+  programs_section_subtitle: "Berbagai program pendidikan dan pembinaan untuk membentuk santri yang berkualitas",
+};
 
 const programs = [
   {
@@ -41,15 +55,45 @@ const programs = [
 ];
 
 export function ProgramsSection() {
+  const [settings, setSettings] = useState<ProgramsSettings>(defaultSettings);
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('key, value');
+
+      if (error) throw error;
+
+      if (data) {
+        const settingsMap: Partial<ProgramsSettings> = {};
+        data.forEach((item) => {
+          if (item.key.startsWith('programs_') && item.value) {
+            settingsMap[item.key as keyof ProgramsSettings] = item.value;
+          }
+        });
+        setSettings(prev => ({ ...prev, ...settingsMap }));
+      }
+    } catch (error) {
+      console.error('Error fetching programs settings:', error);
+    }
+  };
+
   return (
     <section id="program" className="py-20 bg-background">
       <div className="container-section">
         {/* Header */}
         <div className="text-center mb-12">
-          <span className="text-primary font-medium text-sm uppercase tracking-wider">Program Kami</span>
-          <h2 className="section-title mt-2">Program Unggulan</h2>
+          <span className="text-primary font-medium text-sm uppercase tracking-wider">
+            {settings.programs_section_label}
+          </span>
+          <h2 className="section-title mt-2">{settings.programs_section_title}</h2>
           <p className="section-subtitle">
-            Berbagai program pendidikan dan pembinaan untuk membentuk santri yang berkualitas
+            {settings.programs_section_subtitle}
           </p>
         </div>
 
