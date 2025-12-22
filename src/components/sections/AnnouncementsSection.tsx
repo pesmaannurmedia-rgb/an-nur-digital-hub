@@ -106,14 +106,14 @@ export function AnnouncementsSection() {
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                  {/* Icon */}
+                  {/* Icon - Using consistent primary color */}
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                     <IconComponent className="w-6 h-6 text-primary" />
                   </div>
                   
                   <div className="flex-1">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                      <Calendar className="w-4 h-4" />
+                      <Calendar className="w-4 h-4 text-muted-foreground" />
                       <time>{formatDate(item.published_at)}</time>
                     </div>
                     <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
@@ -129,7 +129,7 @@ export function AnnouncementsSection() {
                       href={item.link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center text-primary hover:underline text-sm font-medium whitespace-nowrap"
+                      className="inline-flex items-center text-primary hover:text-primary/80 text-sm font-medium whitespace-nowrap transition-colors"
                     >
                       Lihat Detail
                       <ArrowRight className="ml-1 w-4 h-4" />
@@ -137,7 +137,7 @@ export function AnnouncementsSection() {
                   ) : (
                     <Link 
                       to="/blog" 
-                      className="inline-flex items-center text-primary hover:underline text-sm font-medium whitespace-nowrap"
+                      className="inline-flex items-center text-primary hover:text-primary/80 text-sm font-medium whitespace-nowrap transition-colors"
                     >
                       Lihat Detail
                       <ArrowRight className="ml-1 w-4 h-4" />

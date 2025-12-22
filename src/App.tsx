@@ -29,6 +29,7 @@ import AdminGallery from "./pages/admin/AdminGallery";
 import AdminSiteSettings from "./pages/admin/AdminSiteSettings";
 import AdminMediaLibrary from "./pages/admin/AdminMediaLibrary";
 import AdminActivityLog from "./pages/admin/AdminActivityLog";
+import AdminHomepage from "./pages/admin/AdminHomepage";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,7 @@ const App = () => (
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />
+                <Route path="homepage" element={<AdminHomepage />} />
                 <Route path="books" element={<AdminBooks />} />
                 <Route path="products" element={<AdminProducts />} />
                 <Route path="posts" element={<AdminPosts />} />
