@@ -22,6 +22,7 @@ import {
   ImageIcon,
   Cog,
   History,
+  Home,
 } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -86,6 +87,7 @@ const menuGroups = [
     title: 'Pengaturan',
     icon: Settings,
     items: [
+      { title: 'Edit Homepage', url: '/admin/homepage', icon: Home },
       { title: 'Pengaturan Website', url: '/admin/settings', icon: Cog },
       { title: 'Kelola Admin', url: '/admin/users', icon: Users },
       { title: 'Activity Log', url: '/admin/activity-log', icon: History },
