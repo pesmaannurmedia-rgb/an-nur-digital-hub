@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Quote } from "lucide-react";
+import { Quote, Star } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -9,65 +9,113 @@ interface TestimonialsSettings {
   testimonials_section_subtitle: string;
 }
 
+interface Testimonial {
+  id: string;
+  name: string;
+  role: string | null;
+  content: string;
+  avatar_url: string | null;
+  rating: number | null;
+  position: number | null;
+  is_active: boolean | null;
+}
+
 const defaultSettings: TestimonialsSettings = {
   testimonials_section_label: "Testimoni",
   testimonials_section_title: "Apa Kata Alumni & Santri",
   testimonials_section_subtitle: "Cerita dan pengalaman dari mereka yang telah merasakan manfaat belajar di An-Nur",
 };
 
-const testimonials = [
+// Fallback testimonials if database is empty
+const fallbackTestimonials: Testimonial[] = [
   {
-    id: 1,
+    id: '1',
     name: "Ahmad Fauzi",
-    status: "Alumni 2023 - Mahasiswa Teknik",
-    quote: "Pesantren An-Nur mengajarkan saya bagaimana menyeimbangkan kuliah dan ibadah. Alhamdulillah bisa hafal 10 juz sambil tetap lulus cum laude.",
+    role: "Alumni 2023 - Mahasiswa Teknik",
+    content: "Pesantren An-Nur mengajarkan saya bagaimana menyeimbangkan kuliah dan ibadah. Alhamdulillah bisa hafal 10 juz sambil tetap lulus cum laude.",
+    avatar_url: null,
+    rating: 5,
+    position: 0,
+    is_active: true,
   },
   {
-    id: 2,
+    id: '2',
     name: "Fatimah Azzahra",
-    status: "Santri Aktif - Mahasiswi Kedokteran",
-    quote: "Lingkungan yang Islami dan supportif sangat membantu saya melewati masa-masa sulit kuliah kedokteran. Ukhuwah di sini luar biasa.",
+    role: "Santri Aktif - Mahasiswi Kedokteran",
+    content: "Lingkungan yang Islami dan supportif sangat membantu saya melewati masa-masa sulit kuliah kedokteran. Ukhuwah di sini luar biasa.",
+    avatar_url: null,
+    rating: 5,
+    position: 1,
+    is_active: true,
   },
   {
-    id: 3,
+    id: '3',
     name: "Muhammad Rizki",
-    status: "Alumni 2022 - Entrepreneur",
-    quote: "Nilai-nilai yang diajarkan di pesantren sangat bermanfaat dalam membangun bisnis yang halal dan berkah. Jazakumullah khairan untuk seluruh asatidz.",
+    role: "Alumni 2022 - Entrepreneur",
+    content: "Nilai-nilai yang diajarkan di pesantren sangat bermanfaat dalam membangun bisnis yang halal dan berkah. Jazakumullah khairan untuk seluruh asatidz.",
+    avatar_url: null,
+    rating: 5,
+    position: 2,
+    is_active: true,
   },
   {
-    id: 4,
+    id: '4',
     name: "Aisyah Putri",
-    status: "Santri Aktif - Mahasiswi Hukum",
-    quote: "Belajar di An-Nur membuat saya lebih percaya diri dengan identitas Muslimah saya. Kajian-kajian di sini sangat relevan dengan kehidupan modern.",
+    role: "Santri Aktif - Mahasiswi Hukum",
+    content: "Belajar di An-Nur membuat saya lebih percaya diri dengan identitas Muslimah saya. Kajian-kajian di sini sangat relevan dengan kehidupan modern.",
+    avatar_url: null,
+    rating: 5,
+    position: 3,
+    is_active: true,
   },
 ];
 
 export function TestimonialsSection() {
   const [settings, setSettings] = useState<TestimonialsSettings>(defaultSettings);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchSettings();
+    fetchData();
   }, []);
 
-  const fetchSettings = async () => {
+  const fetchData = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch settings
+      const { data: settingsData } = await supabase
         .from('site_settings')
         .select('key, value');
 
-      if (error) throw error;
-
-      if (data) {
+      if (settingsData) {
         const settingsMap: Partial<TestimonialsSettings> = {};
-        data.forEach((item) => {
+        settingsData.forEach((item) => {
           if (item.key.startsWith('testimonials_') && item.value) {
             settingsMap[item.key as keyof TestimonialsSettings] = item.value;
           }
         });
         setSettings(prev => ({ ...prev, ...settingsMap }));
       }
+
+      // Fetch testimonials from database
+      const { data: testimonialsData, error } = await supabase
+        .from('testimonials')
+        .select('*')
+        .eq('is_active', true)
+        .order('position', { ascending: true });
+
+      if (error) throw error;
+      
+      // Use database testimonials if available, otherwise use fallback
+      if (testimonialsData && testimonialsData.length > 0) {
+        setTestimonials(testimonialsData);
+      } else {
+        setTestimonials(fallbackTestimonials);
+      }
     } catch (error) {
-      console.error('Error fetching testimonials settings:', error);
+      console.error('Error fetching testimonials:', error);
+      setTestimonials(fallbackTestimonials);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -101,19 +149,36 @@ export function TestimonialsSection() {
 
                 {/* Quote Text */}
                 <blockquote className="text-muted-foreground leading-relaxed mb-6 pr-12">
-                  "{testimonial.quote}"
+                  "{testimonial.content}"
                 </blockquote>
+
+                {/* Rating */}
+                {testimonial.rating && testimonial.rating > 0 && (
+                  <div className="flex gap-1 mb-4">
+                    {Array.from({ length: testimonial.rating }).map((_, i) => (
+                      <Star key={i} className="w-4 h-4 fill-secondary text-secondary" />
+                    ))}
+                  </div>
+                )}
 
                 {/* Author */}
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                    <span className="text-primary font-bold text-lg">
-                      {testimonial.name.charAt(0)}
-                    </span>
-                  </div>
+                  {testimonial.avatar_url ? (
+                    <img
+                      src={testimonial.avatar_url}
+                      alt={testimonial.name}
+                      className="w-12 h-12 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                      <span className="text-primary font-bold text-lg">
+                        {testimonial.name.charAt(0)}
+                      </span>
+                    </div>
+                  )}
                   <div>
                     <div className="font-semibold text-foreground">{testimonial.name}</div>
-                    <div className="text-sm text-muted-foreground">{testimonial.status}</div>
+                    <div className="text-sm text-muted-foreground">{testimonial.role}</div>
                   </div>
                 </div>
               </CardContent>
