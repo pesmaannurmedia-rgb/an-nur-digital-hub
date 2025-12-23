@@ -9,6 +9,23 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2, Plus, Save, Trash2, GripVertical, Eye, EyeOff, Star, Quote, Upload, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface Testimonial {
   id: string;
@@ -21,6 +38,91 @@ interface Testimonial {
   is_active: boolean | null;
 }
 
+function SortableItem({
+  testimonial,
+  onEdit,
+  onToggle,
+  onDelete,
+}: {
+  testimonial: Testimonial;
+  onEdit: () => void;
+  onToggle: () => void;
+  onDelete: () => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: testimonial.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center gap-4 p-4 border rounded-lg transition-colors ${
+        testimonial.is_active ? 'bg-background' : 'bg-muted/50 opacity-60'
+      } ${isDragging ? 'shadow-lg ring-2 ring-primary' : ''}`}
+    >
+      <button
+        {...attributes}
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing touch-none"
+      >
+        <GripVertical className="h-5 w-5 text-muted-foreground" />
+      </button>
+      {testimonial.avatar_url ? (
+        <img
+          src={testimonial.avatar_url}
+          alt={testimonial.name}
+          className="w-10 h-10 rounded-full object-cover"
+        />
+      ) : (
+        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+          <span className="text-primary font-semibold">{testimonial.name.charAt(0)}</span>
+        </div>
+      )}
+      <div className="flex-1 min-w-0">
+        <div className="font-medium text-foreground">{testimonial.name}</div>
+        <div className="text-sm text-muted-foreground">{testimonial.role}</div>
+        <div className="text-xs text-muted-foreground truncate mt-1">
+          "{testimonial.content}"
+        </div>
+      </div>
+      <div className="flex items-center gap-1">
+        {Array.from({ length: testimonial.rating || 0 }).map((_, i) => (
+          <Star key={i} className="w-3 h-3 fill-secondary text-secondary" />
+        ))}
+      </div>
+      <div className="flex items-center gap-2">
+        <Switch
+          checked={testimonial.is_active || false}
+          onCheckedChange={onToggle}
+        />
+        <Button variant="ghost" size="sm" onClick={onEdit}>
+          Edit
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-destructive hover:text-destructive"
+          onClick={onDelete}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminTestimonials() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,6 +132,13 @@ export default function AdminTestimonials() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   useEffect(() => {
     fetchTestimonials();
@@ -49,6 +158,39 @@ export default function AdminTestimonials() {
       toast.error('Gagal memuat data testimoni');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = testimonials.findIndex((t) => t.id === active.id);
+      const newIndex = testimonials.findIndex((t) => t.id === over.id);
+
+      const newTestimonials = arrayMove(testimonials, oldIndex, newIndex);
+      setTestimonials(newTestimonials);
+
+      // Update positions in database
+      try {
+        const updates = newTestimonials.map((testimonial, index) => ({
+          id: testimonial.id,
+          position: index,
+        }));
+
+        for (const update of updates) {
+          await supabase
+            .from('testimonials')
+            .update({ position: update.position })
+            .eq('id', update.id);
+        }
+
+        toast.success('Urutan testimoni berhasil diperbarui');
+      } catch (error) {
+        console.error('Error updating positions:', error);
+        toast.error('Gagal memperbarui urutan');
+        fetchTestimonials(); // Revert on error
+      }
     }
   };
 
@@ -188,7 +330,7 @@ export default function AdminTestimonials() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground">Kelola Testimoni</h2>
-          <p className="text-muted-foreground">Kelola testimoni yang ditampilkan di homepage</p>
+          <p className="text-muted-foreground">Kelola testimoni yang ditampilkan di homepage. Drag untuk mengatur urutan.</p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -265,70 +407,40 @@ export default function AdminTestimonials() {
         </Card>
       )}
 
-      {/* Testimonials List */}
+      {/* Testimonials List with Drag and Drop */}
       <Card>
         <CardHeader>
           <CardTitle>Daftar Testimoni ({testimonials.length})</CardTitle>
-          <CardDescription>Klik pada testimoni untuk mengedit</CardDescription>
+          <CardDescription>Drag untuk mengubah urutan, klik pada testimoni untuk mengedit</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {testimonials.map((testimonial) => (
-              <div
-                key={testimonial.id}
-                className={`flex items-center gap-4 p-4 border rounded-lg transition-colors ${
-                  testimonial.is_active ? 'bg-background' : 'bg-muted/50 opacity-60'
-                }`}
-              >
-                <GripVertical className="h-5 w-5 text-muted-foreground cursor-move" />
-                {testimonial.avatar_url ? (
-                  <img
-                    src={testimonial.avatar_url}
-                    alt={testimonial.name}
-                    className="w-10 h-10 rounded-full object-cover"
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={testimonials.map(t => t.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="space-y-3">
+                {testimonials.map((testimonial) => (
+                  <SortableItem
+                    key={testimonial.id}
+                    testimonial={testimonial}
+                    onEdit={() => openEditDialog(testimonial)}
+                    onToggle={() => handleToggleActive(testimonial)}
+                    onDelete={() => setDeleteId(testimonial.id)}
                   />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-primary font-semibold">{testimonial.name.charAt(0)}</span>
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-foreground">{testimonial.name}</div>
-                  <div className="text-sm text-muted-foreground">{testimonial.role}</div>
-                  <div className="text-xs text-muted-foreground truncate mt-1">
-                    "{testimonial.content}"
-                  </div>
-                </div>
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: testimonial.rating || 0 }).map((_, i) => (
-                    <Star key={i} className="w-3 h-3 fill-secondary text-secondary" />
-                  ))}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Switch
-                    checked={testimonial.is_active || false}
-                    onCheckedChange={() => handleToggleActive(testimonial)}
-                  />
-                  <Button variant="ghost" size="sm" onClick={() => openEditDialog(testimonial)}>
-                    Edit
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-destructive hover:text-destructive"
-                    onClick={() => setDeleteId(testimonial.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+                ))}
               </div>
-            ))}
-            {testimonials.length === 0 && (
-              <p className="text-center text-muted-foreground py-8">
-                Belum ada testimoni. Klik "Tambah Testimoni" untuk menambahkan.
-              </p>
-            )}
-          </div>
+            </SortableContext>
+          </DndContext>
+          {testimonials.length === 0 && (
+            <p className="text-center text-muted-foreground py-8">
+              Belum ada testimoni. Klik "Tambah Testimoni" untuk menambahkan.
+            </p>
+          )}
         </CardContent>
       </Card>
 
