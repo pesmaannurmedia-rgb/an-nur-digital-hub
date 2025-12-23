@@ -30,6 +30,8 @@ import AdminSiteSettings from "./pages/admin/AdminSiteSettings";
 import AdminMediaLibrary from "./pages/admin/AdminMediaLibrary";
 import AdminActivityLog from "./pages/admin/AdminActivityLog";
 import AdminHomepage from "./pages/admin/AdminHomepage";
+import AdminPrograms from "./pages/admin/AdminPrograms";
+import AdminTestimonials from "./pages/admin/AdminTestimonials";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +69,8 @@ const App = () => (
                 <Route path="settings" element={<AdminSiteSettings />} />
                 <Route path="media" element={<AdminMediaLibrary />} />
                 <Route path="activity-log" element={<AdminActivityLog />} />
+                <Route path="programs" element={<AdminPrograms />} />
+                <Route path="testimonials" element={<AdminTestimonials />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
