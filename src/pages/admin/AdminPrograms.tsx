@@ -9,6 +9,23 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2, Plus, Save, Trash2, GripVertical, Eye, EyeOff, BookOpen } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface Program {
   id: string;
@@ -25,6 +42,77 @@ const iconOptions = [
   'Languages', 'School', 'Library', 'Pencil'
 ];
 
+function SortableItem({ 
+  program, 
+  onEdit, 
+  onToggle, 
+  onDelete 
+}: { 
+  program: Program; 
+  onEdit: () => void; 
+  onToggle: () => void; 
+  onDelete: () => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: program.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center gap-4 p-4 border rounded-lg transition-colors ${
+        program.is_active ? 'bg-background' : 'bg-muted/50 opacity-60'
+      } ${isDragging ? 'shadow-lg ring-2 ring-primary' : ''}`}
+    >
+      <button
+        {...attributes}
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing touch-none"
+      >
+        <GripVertical className="h-5 w-5 text-muted-foreground" />
+      </button>
+      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+        <BookOpen className="w-5 h-5 text-primary" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="font-medium text-foreground">{program.title}</div>
+        <div className="text-sm text-muted-foreground truncate">
+          {program.description || 'Tidak ada deskripsi'}
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <Switch
+          checked={program.is_active || false}
+          onCheckedChange={onToggle}
+        />
+        <Button variant="ghost" size="sm" onClick={onEdit}>
+          Edit
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-destructive hover:text-destructive"
+          onClick={onDelete}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminPrograms() {
   const [programs, setPrograms] = useState<Program[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,6 +121,13 @@ export default function AdminPrograms() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   useEffect(() => {
     fetchPrograms();
@@ -52,6 +147,39 @@ export default function AdminPrograms() {
       toast.error('Gagal memuat data program');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = programs.findIndex((p) => p.id === active.id);
+      const newIndex = programs.findIndex((p) => p.id === over.id);
+
+      const newPrograms = arrayMove(programs, oldIndex, newIndex);
+      setPrograms(newPrograms);
+
+      // Update positions in database
+      try {
+        const updates = newPrograms.map((program, index) => ({
+          id: program.id,
+          position: index,
+        }));
+
+        for (const update of updates) {
+          await supabase
+            .from('programs')
+            .update({ position: update.position })
+            .eq('id', update.id);
+        }
+
+        toast.success('Urutan program berhasil diperbarui');
+      } catch (error) {
+        console.error('Error updating positions:', error);
+        toast.error('Gagal memperbarui urutan');
+        fetchPrograms(); // Revert on error
+      }
     }
   };
 
@@ -158,7 +286,7 @@ export default function AdminPrograms() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground">Kelola Program</h2>
-          <p className="text-muted-foreground">Kelola program unggulan yang ditampilkan di homepage</p>
+          <p className="text-muted-foreground">Kelola program unggulan yang ditampilkan di homepage. Drag untuk mengatur urutan.</p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -210,56 +338,40 @@ export default function AdminPrograms() {
         </Card>
       )}
 
-      {/* Programs List */}
+      {/* Programs List with Drag and Drop */}
       <Card>
         <CardHeader>
           <CardTitle>Daftar Program ({programs.length})</CardTitle>
-          <CardDescription>Klik pada program untuk mengedit</CardDescription>
+          <CardDescription>Drag untuk mengubah urutan, klik pada program untuk mengedit</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {programs.map((program) => (
-              <div
-                key={program.id}
-                className={`flex items-center gap-4 p-4 border rounded-lg transition-colors ${
-                  program.is_active ? 'bg-background' : 'bg-muted/50 opacity-60'
-                }`}
-              >
-                <GripVertical className="h-5 w-5 text-muted-foreground cursor-move" />
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <BookOpen className="w-5 h-5 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-foreground">{program.title}</div>
-                  <div className="text-sm text-muted-foreground truncate">
-                    {program.description || 'Tidak ada deskripsi'}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Switch
-                    checked={program.is_active || false}
-                    onCheckedChange={() => handleToggleActive(program)}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={programs.map(p => p.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="space-y-3">
+                {programs.map((program) => (
+                  <SortableItem
+                    key={program.id}
+                    program={program}
+                    onEdit={() => openEditDialog(program)}
+                    onToggle={() => handleToggleActive(program)}
+                    onDelete={() => setDeleteId(program.id)}
                   />
-                  <Button variant="ghost" size="sm" onClick={() => openEditDialog(program)}>
-                    Edit
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-destructive hover:text-destructive"
-                    onClick={() => setDeleteId(program.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+                ))}
               </div>
-            ))}
-            {programs.length === 0 && (
-              <p className="text-center text-muted-foreground py-8">
-                Belum ada program. Klik "Tambah Program" untuk menambahkan.
-              </p>
-            )}
-          </div>
+            </SortableContext>
+          </DndContext>
+          {programs.length === 0 && (
+            <p className="text-center text-muted-foreground py-8">
+              Belum ada program. Klik "Tambah Program" untuk menambahkan.
+            </p>
+          )}
         </CardContent>
       </Card>
 
