@@ -8,7 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { Helmet } from "react-helmet";
-
+import { ShareButtons } from "@/components/ShareButtons";
+import { Separator } from "@/components/ui/separator";
 interface Post {
   id: string;
   title: string;
@@ -203,6 +204,14 @@ const BlogSinglePage = () => {
           <div 
             className="prose prose-lg max-w-none dark:prose-invert prose-headings:text-foreground prose-p:text-muted-foreground prose-li:text-muted-foreground prose-strong:text-foreground"
             dangerouslySetInnerHTML={{ __html: post.content || '<p>Konten artikel tidak tersedia.</p>' }}
+          />
+
+          {/* Share Buttons */}
+          <Separator className="my-8" />
+          <ShareButtons 
+            url={currentUrl} 
+            title={post.title} 
+            description={post.excerpt || undefined} 
           />
 
           {relatedPosts.length > 0 && (

@@ -10,13 +10,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Helmet } from "react-helmet";
 import { ImageZoomModal } from "@/components/ImageZoomModal";
 import { RelatedProducts } from "@/components/RelatedProducts";
+import { ShareButtons } from "@/components/ShareButtons";
 
 interface Book {
   id: string;
   name: string;
   slug: string;
   author: string | null;
+  author_family_name: string | null;
   author_affiliation: string | null;
+  editor: string | null;
   publisher: string | null;
   publish_year: number | null;
   edition: string | null;
@@ -145,7 +148,9 @@ const ShopSinglePage = () => {
         {/* Google Scholar Meta Tags */}
         <meta name="citation_title" content={book.name} />
         {book.author && <meta name="citation_author" content={book.author} />}
+        {book.author_family_name && <meta name="citation_author_lastname" content={book.author_family_name} />}
         {book.author_affiliation && <meta name="citation_author_institution" content={book.author_affiliation} />}
+        {book.editor && <meta name="citation_editor" content={book.editor} />}
         {book.publish_year && <meta name="citation_publication_date" content={String(book.publish_year)} />}
         {book.publisher && <meta name="citation_publisher" content={book.publisher} />}
         {book.isbn && <meta name="citation_isbn" content={book.isbn} />}
@@ -159,6 +164,7 @@ const ShopSinglePage = () => {
         {/* Dublin Core Metadata */}
         <meta name="DC.title" content={book.name} />
         {book.author && <meta name="DC.creator" content={book.author} />}
+        {book.editor && <meta name="DC.contributor" content={book.editor} />}
         {book.publish_year && <meta name="DC.date" content={String(book.publish_year)} />}
         {book.publisher && <meta name="DC.publisher" content={book.publisher} />}
         {book.language && <meta name="DC.language" content={book.language} />}
@@ -173,6 +179,15 @@ const ShopSinglePage = () => {
         <meta property="og:url" content={currentUrl} />
         {book.isbn && <meta property="book:isbn" content={book.isbn} />}
         {book.author && <meta property="book:author" content={book.author} />}
+        
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={book.name} />
+        <meta name="twitter:description" content={book.abstract || `${book.name} oleh ${book.author}`} />
+        {book.image_url && <meta name="twitter:image" content={book.image_url} />}
+        
+        {/* Canonical URL */}
+        <link rel="canonical" href={currentUrl} />
       </Helmet>
 
       <article className="py-8 md:py-16">
@@ -432,6 +447,16 @@ const ShopSinglePage = () => {
                   </a>
                 </section>
               )}
+
+              {/* Share Buttons */}
+              <Separator />
+              <section>
+                <ShareButtons 
+                  url={currentUrl} 
+                  title={book.name} 
+                  description={book.abstract || `${book.name} oleh ${book.author}`} 
+                />
+              </section>
             </div>
           </div>
 
@@ -453,10 +478,15 @@ const ShopSinglePage = () => {
           "author": book.author ? {
             "@type": "Person",
             "name": book.author,
+            "familyName": book.author_family_name || undefined,
             "affiliation": book.author_affiliation ? {
               "@type": "Organization",
               "name": book.author_affiliation
             } : undefined
+          } : undefined,
+          "editor": book.editor ? {
+            "@type": "Person",
+            "name": book.editor
           } : undefined,
           "publisher": book.publisher ? {
             "@type": "Organization",

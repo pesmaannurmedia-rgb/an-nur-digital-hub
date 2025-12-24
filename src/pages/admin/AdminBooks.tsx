@@ -57,7 +57,9 @@ const bookSchema = z.object({
   name: z.string().min(1, 'Judul buku wajib diisi'),
   slug: z.string().min(1, 'Slug wajib diisi'),
   author: z.string().min(1, 'Penulis wajib diisi'),
+  author_family_name: z.string().optional(),
   author_affiliation: z.string().optional(),
+  editor: z.string().optional(),
   
   // Informasi Penerbitan
   publisher: z.string().optional(),
@@ -100,7 +102,9 @@ interface Book {
   name: string;
   slug: string;
   author: string | null;
+  author_family_name: string | null;
   author_affiliation: string | null;
+  editor: string | null;
   publisher: string | null;
   publish_year: number | null;
   edition: string | null;
@@ -201,7 +205,9 @@ export default function AdminBooks() {
       name: '',
       slug: '',
       author: '',
+      author_family_name: '',
       author_affiliation: '',
+      editor: '',
       publisher: '',
       publish_year: '',
       edition: '',
@@ -283,7 +289,9 @@ export default function AdminBooks() {
       name: '',
       slug: '',
       author: '',
+      author_family_name: '',
       author_affiliation: '',
+      editor: '',
       publisher: '',
       publish_year: '',
       edition: '',
@@ -315,7 +323,9 @@ export default function AdminBooks() {
       name: book.name,
       slug: book.slug,
       author: book.author || '',
+      author_family_name: book.author_family_name || '',
       author_affiliation: book.author_affiliation || '',
+      editor: book.editor || '',
       publisher: book.publisher || '',
       publish_year: book.publish_year || '',
       edition: book.edition || '',
@@ -352,7 +362,9 @@ export default function AdminBooks() {
         name: values.name,
         slug: values.slug,
         author: values.author || null,
+        author_family_name: values.author_family_name || null,
         author_affiliation: values.author_affiliation || null,
+        editor: values.editor || null,
         publisher: values.publisher || null,
         publish_year: values.publish_year ? Number(values.publish_year) : null,
         edition: values.edition || null,
@@ -555,6 +567,38 @@ export default function AdminBooks() {
                         </FormItem>
                       )}
                     />
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="author_family_name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Family Name (Nama Belakang)</FormLabel>
+                            <FormDescription>Untuk format sitasi Google Scholar</FormDescription>
+                            <FormControl>
+                              <Input placeholder="Contoh: Dahlan" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="editor"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Editor (Opsional)</FormLabel>
+                            <FormDescription>Nama editor buku jika ada</FormDescription>
+                            <FormControl>
+                              <Input placeholder="Contoh: Dr. Siti Aminah, M.A." {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
 
                     <FormField
                       control={form.control}
