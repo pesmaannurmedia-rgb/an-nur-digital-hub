@@ -3,6 +3,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Badge } from '@/components/ui/badge';
+import { Helmet } from 'react-helmet';
 
 interface Page {
   id: string;
@@ -106,19 +107,42 @@ export default function PageSingle() {
     );
   }
 
+  const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
+  const siteName = "Pesantren An-Nur";
+
   return (
     <MainLayout>
+      <Helmet>
+        <title>{page.title} | {siteName}</title>
+        {page.meta_description && <meta name="description" content={page.meta_description} />}
+        
+        {/* Open Graph */}
+        <meta property="og:title" content={page.title} />
+        <meta property="og:type" content="website" />
+        {page.meta_description && <meta property="og:description" content={page.meta_description} />}
+        {page.featured_image && <meta property="og:image" content={page.featured_image} />}
+        <meta property="og:url" content={currentUrl} />
+        <meta property="og:site_name" content={siteName} />
+        
+        {/* Twitter Card */}
+        <meta name="twitter:card" content={page.featured_image ? "summary_large_image" : "summary"} />
+        <meta name="twitter:title" content={page.title} />
+        {page.meta_description && <meta name="twitter:description" content={page.meta_description} />}
+        {page.featured_image && <meta name="twitter:image" content={page.featured_image} />}
+        
+        {/* Canonical URL */}
+        <link rel="canonical" href={currentUrl} />
+        
+        {/* Robots directive */}
+        <meta name="robots" content={page.is_published ? "index, follow" : "noindex, nofollow"} />
+      </Helmet>
+
       {/* Preview Mode Banner */}
       {isPreviewMode && !page.is_published && (
         <div className="bg-amber-500/90 text-amber-950 py-2 px-4 text-center text-sm font-medium">
           <Badge variant="outline" className="mr-2 border-amber-950 text-amber-950">PREVIEW</Badge>
           Anda sedang melihat preview halaman draft. Halaman ini belum dipublikasikan.
         </div>
-      )}
-
-      {/* SEO Meta */}
-      {page.meta_description && (
-        <meta name="description" content={page.meta_description} />
       )}
 
       {/* Featured Image */}
