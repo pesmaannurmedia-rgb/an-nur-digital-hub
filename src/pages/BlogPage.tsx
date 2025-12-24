@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
+import { Helmet } from "react-helmet";
 
 interface Post {
   id: string;
@@ -56,6 +57,17 @@ const BlogPage = () => {
 
   return (
     <MainLayout>
+      <Helmet>
+        <title>Blog & Kajian | Pesantren An-Nur</title>
+        <meta name="description" content="Artikel, kajian Islam, dan pengumuman resmi dari Pesantren An-Nur. Dapatkan ilmu dan wawasan keislaman terbaru." />
+        <meta property="og:title" content="Blog & Kajian | Pesantren An-Nur" />
+        <meta property="og:description" content="Artikel, kajian Islam, dan pengumuman resmi dari Pesantren An-Nur." />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content="Blog & Kajian | Pesantren An-Nur" />
+        <link rel="canonical" href={typeof window !== 'undefined' ? window.location.href : ''} />
+      </Helmet>
+
       <section className="py-16 bg-surface min-h-screen">
         <div className="container-section">
           <div className="text-center mb-12">

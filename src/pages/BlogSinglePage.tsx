@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
+import { Helmet } from "react-helmet";
 
 interface Post {
   id: string;
@@ -141,8 +142,36 @@ const BlogSinglePage = () => {
     );
   }
   
+  const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
+  const siteName = "Pesantren An-Nur";
+
   return (
     <MainLayout>
+      <Helmet>
+        <title>{post.title} | Blog {siteName}</title>
+        <meta name="description" content={post.excerpt || `Baca artikel ${post.title} di blog ${siteName}`} />
+        
+        {/* Open Graph */}
+        <meta property="og:title" content={post.title} />
+        <meta property="og:type" content="article" />
+        <meta property="og:description" content={post.excerpt || ''} />
+        {post.image_url && <meta property="og:image" content={post.image_url} />}
+        <meta property="og:url" content={currentUrl} />
+        <meta property="og:site_name" content={siteName} />
+        {post.published_at && <meta property="article:published_time" content={post.published_at} />}
+        <meta property="article:author" content={post.author} />
+        <meta property="article:section" content={post.category} />
+        
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={post.title} />
+        <meta name="twitter:description" content={post.excerpt || ''} />
+        {post.image_url && <meta name="twitter:image" content={post.image_url} />}
+        
+        {/* Canonical URL */}
+        <link rel="canonical" href={currentUrl} />
+      </Helmet>
+
       <article className="py-16">
         <div className="container-section max-w-4xl">
           <Button variant="ghost" asChild className="mb-6">
@@ -190,6 +219,30 @@ const BlogSinglePage = () => {
           )}
         </div>
       </article>
+
+      {/* JSON-LD Structured Data */}
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Article",
+          "headline": post.title,
+          "description": post.excerpt || '',
+          "image": post.image_url || undefined,
+          "author": {
+            "@type": "Person",
+            "name": post.author
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": siteName
+          },
+          "datePublished": post.published_at || undefined,
+          "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": currentUrl
+          }
+        })}
+      </script>
     </MainLayout>
   );
 };

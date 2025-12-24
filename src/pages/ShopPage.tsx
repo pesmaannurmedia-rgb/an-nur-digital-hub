@@ -14,6 +14,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "react-router-dom";
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Helmet } from "react-helmet";
 
 interface Product {
   id: string;
@@ -166,6 +167,21 @@ const ShopPage = () => {
 
   return (
     <MainLayout>
+      <Helmet>
+        <title>Toko Buku & Produk | Pesantren An-Nur</title>
+        <meta name="description" content="Beli buku-buku Islami, kitab, dan produk resmi Pesantren An-Nur. Koleksi buku berkualitas untuk kajian dan pembelajaran." />
+        <meta property="og:title" content="Toko Buku & Produk | Pesantren An-Nur" />
+        <meta property="og:description" content="Beli buku-buku Islami, kitab, dan produk resmi Pesantren An-Nur." />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content="Toko Buku & Produk | Pesantren An-Nur" />
+        <link rel="canonical" href={typeof window !== 'undefined' ? window.location.href : ''} />
+        
+        {/* Scholar-friendly hints */}
+        <meta name="robots" content="index, follow" />
+        <meta name="googlebot" content="index, follow" />
+      </Helmet>
+
       <section className="py-16 bg-surface min-h-screen">
         <div className="container-section">
           <div className="text-center mb-12">
