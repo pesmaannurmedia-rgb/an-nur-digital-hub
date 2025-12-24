@@ -445,6 +445,7 @@ export type Database = {
           abstract: string | null
           author: string | null
           author_affiliation: string | null
+          author_family_name: string | null
           book_format: string | null
           category: string
           created_at: string
@@ -453,6 +454,7 @@ export type Database = {
           discount_price: number | null
           doi: string | null
           edition: string | null
+          editor: string | null
           id: string
           image_url: string | null
           is_active: boolean | null
@@ -477,6 +479,7 @@ export type Database = {
           abstract?: string | null
           author?: string | null
           author_affiliation?: string | null
+          author_family_name?: string | null
           book_format?: string | null
           category?: string
           created_at?: string
@@ -485,6 +488,7 @@ export type Database = {
           discount_price?: number | null
           doi?: string | null
           edition?: string | null
+          editor?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
@@ -509,6 +513,7 @@ export type Database = {
           abstract?: string | null
           author?: string | null
           author_affiliation?: string | null
+          author_family_name?: string | null
           book_format?: string | null
           category?: string
           created_at?: string
@@ -517,6 +522,7 @@ export type Database = {
           discount_price?: number | null
           doi?: string | null
           edition?: string | null
+          editor?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
