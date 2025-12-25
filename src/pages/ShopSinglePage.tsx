@@ -11,6 +11,8 @@ import { Helmet } from "react-helmet";
 import { ImageZoomModal } from "@/components/ImageZoomModal";
 import { RelatedProducts } from "@/components/RelatedProducts";
 import { ShareButtons } from "@/components/ShareButtons";
+import { CitationButtons } from "@/components/CitationButtons";
+import { PDFViewer } from "@/components/PDFViewer";
 
 interface Book {
   id: string;
@@ -32,6 +34,7 @@ interface Book {
   keywords: string[] | null;
   book_format: string | null;
   preview_link: string | null;
+  preview_pdf: string | null;
   purchase_link: string | null;
   category: string;
   price: number;
@@ -420,17 +423,38 @@ const ShopSinglePage = () => {
 
               <Separator />
 
-              {/* Citation */}
+              {/* Citation with Copy Buttons */}
               <section>
                 <h2 className="text-lg font-semibold mb-3">Cara Mengutip</h2>
                 <Card className="bg-muted/50">
-                  <CardContent className="p-4">
+                  <CardContent className="p-4 space-y-4">
                     <p className="text-sm text-muted-foreground italic font-serif">
                       {formatCitation()}
                     </p>
+                    <Separator />
+                    <CitationButtons
+                      title={book.name}
+                      author={book.author}
+                      authorFamilyName={book.author_family_name}
+                      editor={book.editor}
+                      publisher={book.publisher}
+                      publishYear={book.publish_year}
+                      edition={book.edition}
+                      pages={book.pages}
+                      doi={book.doi}
+                      isbn={book.isbn}
+                    />
                   </CardContent>
                 </Card>
               </section>
+
+              {/* PDF Preview */}
+              {book.preview_pdf && (
+                <section>
+                  <h2 className="text-lg font-semibold mb-3">Preview Buku (PDF)</h2>
+                  <PDFViewer pdfUrl={book.preview_pdf} title={book.name} />
+                </section>
+              )}
 
               {/* DOI if available */}
               {book.doi && (
