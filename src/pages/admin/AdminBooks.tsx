@@ -42,7 +42,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Pencil, Trash2, Loader2, BookOpen, ExternalLink, Eye, EyeOff, Copy, Percent, Tag } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, BookOpen, ExternalLink, Eye, EyeOff, Copy, Percent, Tag, FileUp } from 'lucide-react';
 import { ImageUpload } from '@/components/admin/ImageUpload';
 import {
   Tooltip,
@@ -80,6 +80,7 @@ const bookSchema = z.object({
   // Format & Link
   book_format: z.string().default('Cetak'),
   preview_link: z.string().optional(),
+  preview_pdf: z.string().optional().or(z.literal('')),
   purchase_link: z.string().optional(),
   
   // Kategori & Harga
@@ -117,6 +118,7 @@ interface Book {
   keywords: string[] | null;
   book_format: string | null;
   preview_link: string | null;
+  preview_pdf: string | null;
   purchase_link: string | null;
   category: string;
   price: number;
@@ -220,6 +222,7 @@ export default function AdminBooks() {
       keywords: '',
       book_format: 'Cetak',
       preview_link: '',
+      preview_pdf: '',
       purchase_link: '',
       category: '',
       price: 0,
@@ -304,6 +307,7 @@ export default function AdminBooks() {
       keywords: '',
       book_format: 'Cetak',
       preview_link: '',
+      preview_pdf: '',
       purchase_link: '',
       category: categories[0]?.name || '',
       price: 0,
@@ -338,6 +342,7 @@ export default function AdminBooks() {
       keywords: book.keywords?.join(', ') || '',
       book_format: book.book_format || 'Cetak',
       preview_link: book.preview_link || '',
+      preview_pdf: book.preview_pdf || '',
       purchase_link: book.purchase_link || '',
       category: book.category,
       price: book.price,
@@ -377,6 +382,7 @@ export default function AdminBooks() {
         keywords: keywordsArray,
         book_format: values.book_format || 'Cetak',
         preview_link: values.preview_link || null,
+        preview_pdf: values.preview_pdf || null,
         purchase_link: values.purchase_link || null,
         category: values.category,
         price: values.price,
@@ -874,6 +880,45 @@ export default function AdminBooks() {
                         )}
                       />
                     </div>
+
+                    <FormField
+                      control={form.control}
+                      name="preview_pdf"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2">
+                            <FileUp className="w-4 h-4" />
+                            Upload PDF Preview
+                          </FormLabel>
+                          <FormDescription>
+                            Upload file PDF untuk preview buku yang bisa dilihat pengunjung
+                          </FormDescription>
+                          <FormControl>
+                            <ImageUpload
+                              value={field.value || ''}
+                              onChange={field.onChange}
+                              bucket="product-images"
+                              folder="pdf-previews"
+                              accept="application/pdf"
+                            />
+                          </FormControl>
+                          {field.value && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <FileUp className="w-4 h-4" />
+                              <a 
+                                href={field.value} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-primary hover:underline"
+                              >
+                                Lihat PDF
+                              </a>
+                            </div>
+                          )}
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
 
                   {/* Section: Kategori & Harga */}

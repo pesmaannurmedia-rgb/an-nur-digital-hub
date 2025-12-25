@@ -465,6 +465,7 @@ export type Database = {
           name: string
           pages: number | null
           preview_link: string | null
+          preview_pdf: string | null
           price: number
           product_type: string
           publish_year: number | null
@@ -499,6 +500,7 @@ export type Database = {
           name: string
           pages?: number | null
           preview_link?: string | null
+          preview_pdf?: string | null
           price?: number
           product_type?: string
           publish_year?: number | null
@@ -533,6 +535,7 @@ export type Database = {
           name?: string
           pages?: number | null
           preview_link?: string | null
+          preview_pdf?: string | null
           price?: number
           product_type?: string
           publish_year?: number | null
