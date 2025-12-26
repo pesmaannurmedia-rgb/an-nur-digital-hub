@@ -15,6 +15,7 @@ interface CitationButtonsProps {
   authorFamilyName: string | null;
   editor: string | null;
   publisher: string | null;
+  publisherCity: string | null;
   publishYear: number | null;
   edition: string | null;
   pages: number | null;
@@ -28,6 +29,7 @@ export const CitationButtons = ({
   authorFamilyName,
   editor,
   publisher,
+  publisherCity,
   publishYear,
   edition,
   pages,
@@ -99,8 +101,10 @@ export const CitationButtons = ({
     
     citation += ".";
     
-    // Publisher
-    if (publisher) {
+    // Publisher with city
+    if (publisherCity && publisher) {
+      citation += ` ${publisherCity}: ${publisher}.`;
+    } else if (publisher) {
       citation += ` ${publisher}.`;
     }
     
@@ -133,8 +137,10 @@ export const CitationButtons = ({
       citation += `${edition}, `;
     }
     
-    // Publisher
-    if (publisher) {
+    // Publisher with city
+    if (publisherCity && publisher) {
+      citation += `${publisherCity}: ${publisher}, `;
+    } else if (publisher) {
       citation += `${publisher}, `;
     }
     
@@ -167,8 +173,14 @@ export const CitationButtons = ({
       citation += `, ${edition}`;
     }
     
-    // Location and Publisher
-    if (publisher) {
+    // Location and Publisher (Chicago uses: City: Publisher, Year)
+    if (publisherCity && publisher) {
+      citation += ` (${publisherCity}: ${publisher}`;
+      if (publishYear) {
+        citation += `, ${publishYear}`;
+      }
+      citation += ")";
+    } else if (publisher) {
       citation += ` (${publisher}`;
       if (publishYear) {
         citation += `, ${publishYear}`;
@@ -212,8 +224,10 @@ export const CitationButtons = ({
       citation += ` ${edition}.`;
     }
     
-    // Publisher
-    if (publisher) {
+    // Publisher with city
+    if (publisherCity && publisher) {
+      citation += ` ${publisherCity}: ${publisher}.`;
+    } else if (publisher) {
       citation += ` ${publisher}.`;
     }
     

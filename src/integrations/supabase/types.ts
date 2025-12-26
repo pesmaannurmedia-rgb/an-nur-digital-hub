@@ -470,6 +470,7 @@ export type Database = {
           product_type: string
           publish_year: number | null
           publisher: string | null
+          publisher_city: string | null
           purchase_link: string | null
           slug: string
           stock: number | null
@@ -505,6 +506,7 @@ export type Database = {
           product_type?: string
           publish_year?: number | null
           publisher?: string | null
+          publisher_city?: string | null
           purchase_link?: string | null
           slug: string
           stock?: number | null
@@ -540,6 +542,7 @@ export type Database = {
           product_type?: string
           publish_year?: number | null
           publisher?: string | null
+          publisher_city?: string | null
           purchase_link?: string | null
           slug?: string
           stock?: number | null

@@ -23,6 +23,7 @@ interface Book {
   author_affiliation: string | null;
   editor: string | null;
   publisher: string | null;
+  publisher_city: string | null;
   publish_year: number | null;
   edition: string | null;
   pages: number | null;
@@ -438,6 +439,7 @@ const ShopSinglePage = () => {
                       authorFamilyName={book.author_family_name}
                       editor={book.editor}
                       publisher={book.publisher}
+                      publisherCity={book.publisher_city}
                       publishYear={book.publish_year}
                       edition={book.edition}
                       pages={book.pages}
