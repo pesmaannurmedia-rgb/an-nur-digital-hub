@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useActivityLog } from '@/hooks/useActivityLog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -63,6 +64,7 @@ const bookSchema = z.object({
   
   // Informasi Penerbitan
   publisher: z.string().optional(),
+  publisher_city: z.string().optional(),
   publish_year: z.coerce.number().min(1900).max(new Date().getFullYear() + 1).optional().or(z.literal('')),
   edition: z.string().optional(),
   pages: z.coerce.number().min(1).optional().or(z.literal('')),
@@ -107,6 +109,7 @@ interface Book {
   author_affiliation: string | null;
   editor: string | null;
   publisher: string | null;
+  publisher_city: string | null;
   publish_year: number | null;
   edition: string | null;
   pages: number | null;
@@ -146,6 +149,7 @@ export default function AdminBooks() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const { toast } = useToast();
+  const { logActivity } = useActivityLog();
 
   // Bulk action handlers
   const handleSelectAll = () => {
@@ -211,6 +215,7 @@ export default function AdminBooks() {
       author_affiliation: '',
       editor: '',
       publisher: '',
+      publisher_city: '',
       publish_year: '',
       edition: '',
       pages: '',
@@ -296,6 +301,7 @@ export default function AdminBooks() {
       author_affiliation: '',
       editor: '',
       publisher: '',
+      publisher_city: '',
       publish_year: '',
       edition: '',
       pages: '',
@@ -331,6 +337,7 @@ export default function AdminBooks() {
       author_affiliation: book.author_affiliation || '',
       editor: book.editor || '',
       publisher: book.publisher || '',
+      publisher_city: (book as any).publisher_city || '',
       publish_year: book.publish_year || '',
       edition: book.edition || '',
       pages: book.pages || '',
@@ -371,6 +378,7 @@ export default function AdminBooks() {
         author_affiliation: values.author_affiliation || null,
         editor: values.editor || null,
         publisher: values.publisher || null,
+        publisher_city: values.publisher_city || null,
         publish_year: values.publish_year ? Number(values.publish_year) : null,
         edition: values.edition || null,
         pages: values.pages ? Number(values.pages) : null,
@@ -402,11 +410,27 @@ export default function AdminBooks() {
           .eq('id', editingBook.id);
 
         if (error) throw error;
+        
+        await logActivity({
+          action: 'update',
+          entityType: 'product',
+          entityId: editingBook.id,
+          entityName: values.name,
+        });
+        
         toast({ title: 'Berhasil', description: 'Buku berhasil diperbarui' });
       } else {
-        const { error } = await supabase.from('products').insert([bookData]);
+        const { data, error } = await supabase.from('products').insert([bookData]).select().single();
 
         if (error) throw error;
+        
+        await logActivity({
+          action: 'create',
+          entityType: 'product',
+          entityId: data?.id,
+          entityName: values.name,
+        });
+        
         toast({ title: 'Berhasil', description: 'Buku berhasil ditambahkan' });
       }
 
@@ -429,9 +453,20 @@ export default function AdminBooks() {
   const deleteBook = async (id: string) => {
     if (!confirm('Yakin ingin menghapus buku ini?')) return;
 
+    // Get book name for logging before delete
+    const bookToDelete = books.find(b => b.id === id);
+
     try {
       const { error } = await supabase.from('products').delete().eq('id', id);
       if (error) throw error;
+      
+      await logActivity({
+        action: 'delete',
+        entityType: 'product',
+        entityId: id,
+        entityName: bookToDelete?.name || 'Unknown',
+      });
+      
       toast({ title: 'Berhasil', description: 'Buku berhasil dihapus' });
       fetchBooks();
     } catch (error) {
@@ -452,6 +487,15 @@ export default function AdminBooks() {
         .eq('id', book.id);
 
       if (error) throw error;
+      
+      await logActivity({
+        action: 'update',
+        entityType: 'product',
+        entityId: book.id,
+        entityName: book.name,
+        details: { status: !book.is_active ? 'activated' : 'deactivated' },
+      });
+      
       toast({
         title: 'Berhasil',
         description: book.is_active ? 'Buku disembunyikan dari katalog' : 'Buku ditampilkan di katalog',
@@ -466,16 +510,25 @@ export default function AdminBooks() {
     try {
       const newSlug = `${book.slug}-copy-${Date.now().toString(36)}`;
       
-      const { error } = await supabase.from('products').insert([{
+      const { data, error } = await supabase.from('products').insert([{
         ...book,
         id: undefined,
         name: `${book.name} (Salinan)`,
         slug: newSlug,
         is_active: false,
         created_at: undefined,
-      }]);
+      }]).select().single();
 
       if (error) throw error;
+      
+      await logActivity({
+        action: 'create',
+        entityType: 'product',
+        entityId: data?.id,
+        entityName: `${book.name} (Salinan)`,
+        details: { duplicated_from: book.id },
+      });
+      
       toast({ title: 'Berhasil', description: 'Buku berhasil diduplikasi' });
       fetchBooks();
     } catch (error) {
@@ -642,7 +695,7 @@ export default function AdminBooks() {
                     <h3 className="font-semibold text-foreground">Informasi Penerbitan</h3>
                     <Separator />
                     
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-3 gap-4">
                       <FormField
                         control={form.control}
                         name="publisher"
@@ -651,6 +704,21 @@ export default function AdminBooks() {
                             <FormLabel>Penerbit</FormLabel>
                             <FormControl>
                               <Input placeholder="Contoh: Gramedia Pustaka Utama" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="publisher_city"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Kota Penerbit</FormLabel>
+                            <FormDescription>Untuk format sitasi</FormDescription>
+                            <FormControl>
+                              <Input placeholder="Contoh: Jakarta" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
