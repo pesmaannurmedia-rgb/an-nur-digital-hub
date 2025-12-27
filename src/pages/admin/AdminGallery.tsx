@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useActivityLog } from '@/hooks/useActivityLog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -63,6 +64,7 @@ export default function AdminGallery() {
   const [editingItem, setEditingItem] = useState<GalleryItem | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { logActivity } = useActivityLog();
 
   const form = useForm<GalleryFormValues>({
     resolver: zodResolver(gallerySchema),
@@ -140,17 +142,33 @@ export default function AdminGallery() {
           .eq('id', editingItem.id);
 
         if (error) throw error;
+        
+        await logActivity({
+          action: 'update',
+          entityType: 'gallery',
+          entityId: editingItem.id,
+          entityName: values.title,
+        });
+        
         toast({ title: 'Berhasil', description: 'Gambar galeri berhasil diperbarui' });
       } else {
-        const { error } = await supabase.from('gallery').insert([{
+        const { data, error } = await supabase.from('gallery').insert([{
           title: values.title,
           description: values.description || null,
           image_url: values.image_url,
           is_active: values.is_active,
           position: values.position,
-        }]);
+        }]).select('id').single();
 
         if (error) throw error;
+        
+        await logActivity({
+          action: 'create',
+          entityType: 'gallery',
+          entityId: data?.id,
+          entityName: values.title,
+        });
+        
         toast({ title: 'Berhasil', description: 'Gambar galeri berhasil ditambahkan' });
       }
 
@@ -169,11 +187,20 @@ export default function AdminGallery() {
   };
 
   const deleteItem = async (id: string) => {
+    const itemToDelete = items.find(i => i.id === id);
     if (!confirm('Yakin ingin menghapus gambar ini?')) return;
 
     try {
       const { error } = await supabase.from('gallery').delete().eq('id', id);
       if (error) throw error;
+      
+      await logActivity({
+        action: 'delete',
+        entityType: 'gallery',
+        entityId: id,
+        entityName: itemToDelete?.title,
+      });
+      
       toast({ title: 'Berhasil', description: 'Gambar galeri berhasil dihapus' });
       fetchItems();
     } catch (error) {
