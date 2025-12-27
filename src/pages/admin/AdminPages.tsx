@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useActivityLog } from '@/hooks/useActivityLog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -79,6 +80,7 @@ export default function AdminPages() {
   });
 
   const { toast } = useToast();
+  const { logActivity } = useActivityLog();
 
   useEffect(() => {
     fetchPages();
@@ -198,6 +200,13 @@ export default function AdminPages() {
           .update(pageData)
           .eq('id', editingPage.id);
         if (error) throw error;
+        
+        await logActivity({
+          action: 'update',
+          entityType: 'page',
+          entityId: editingPage.id,
+          entityName: formData.title,
+        });
       } else {
         const { data, error } = await supabase
           .from('pages')
@@ -206,6 +215,13 @@ export default function AdminPages() {
           .single();
         if (error) throw error;
         pageId = data.id;
+        
+        await logActivity({
+          action: 'create',
+          entityType: 'page',
+          entityId: pageId,
+          entityName: formData.title,
+        });
       }
 
       // Save blocks
@@ -250,6 +266,7 @@ export default function AdminPages() {
   };
 
   const handleDelete = async (id: string) => {
+    const pageToDelete = pages.find(p => p.id === id);
     if (!confirm('Yakin ingin menghapus halaman ini?')) return;
 
     try {
@@ -259,6 +276,13 @@ export default function AdminPages() {
         .eq('id', id);
 
       if (error) throw error;
+      
+      await logActivity({
+        action: 'delete',
+        entityType: 'page',
+        entityId: id,
+        entityName: pageToDelete?.title,
+      });
 
       toast({
         title: 'Berhasil',

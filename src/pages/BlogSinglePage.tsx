@@ -1,8 +1,9 @@
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Link, useParams } from "react-router-dom";
-import { Calendar, ArrowLeft, Loader2, FileText, User } from "lucide-react";
+import { Calendar, ArrowLeft, Loader2, FileText, User, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -10,6 +11,7 @@ import { id } from "date-fns/locale";
 import { Helmet } from "react-helmet";
 import { ShareButtons } from "@/components/ShareButtons";
 import { Separator } from "@/components/ui/separator";
+
 interface Post {
   id: string;
   title: string;
@@ -19,6 +21,7 @@ interface Post {
   author: string;
   category: string;
   image_url: string | null;
+  tags: string[] | null;
   published_at: string | null;
 }
 
@@ -162,6 +165,9 @@ const BlogSinglePage = () => {
         {post.published_at && <meta property="article:published_time" content={post.published_at} />}
         <meta property="article:author" content={post.author} />
         <meta property="article:section" content={post.category} />
+        {post.tags && post.tags.map((tag, index) => (
+          <meta key={index} property="article:tag" content={tag} />
+        ))}
         
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
@@ -206,6 +212,25 @@ const BlogSinglePage = () => {
             dangerouslySetInnerHTML={{ __html: post.content || '<p>Konten artikel tidak tersedia.</p>' }}
           />
 
+          {/* Tags Section */}
+          {post.tags && post.tags.length > 0 && (
+            <div className="mt-8 pt-6 border-t border-border">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Tag className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium text-muted-foreground mr-2">Tags:</span>
+                {post.tags.map((tag, index) => (
+                  <Badge 
+                    key={index} 
+                    variant="secondary" 
+                    className="text-sm hover:bg-secondary/80 cursor-pointer"
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Share Buttons */}
           <Separator className="my-8" />
           <ShareButtons 
@@ -246,6 +271,7 @@ const BlogSinglePage = () => {
             "name": siteName
           },
           "datePublished": post.published_at || undefined,
+          "keywords": post.tags?.join(', ') || undefined,
           "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": currentUrl

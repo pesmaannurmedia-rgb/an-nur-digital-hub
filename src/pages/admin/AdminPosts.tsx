@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useActivityLog } from '@/hooks/useActivityLog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -63,6 +64,7 @@ const postSchema = z.object({
   author: z.string().min(1, 'Penulis wajib diisi'),
   image_url: z.string().optional().or(z.literal('')),
   image_caption: z.string().optional().or(z.literal('')),
+  tags: z.string().optional().or(z.literal('')),
   is_published: z.boolean(),
   published_at: z.date().optional().nullable(),
 });
@@ -79,6 +81,7 @@ interface Post {
   author: string;
   image_url: string | null;
   image_caption: string | null;
+  tags: string[] | null;
   is_published: boolean | null;
   published_at: string | null;
   created_at: string;
@@ -112,6 +115,7 @@ export default function AdminPosts() {
   const [hasDraft, setHasDraft] = useState(false);
   const autosaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
+  const { logActivity } = useActivityLog();
 
   const form = useForm<PostFormValues>({
     resolver: zodResolver(postSchema),
@@ -124,6 +128,7 @@ export default function AdminPosts() {
       author: 'Admin',
       image_url: '',
       image_caption: '',
+      tags: '',
       is_published: false,
       published_at: null,
     },
@@ -300,6 +305,7 @@ export default function AdminPosts() {
       author: authors[0]?.name || 'Admin',
       image_url: '',
       image_caption: '',
+      tags: '',
       is_published: false,
       published_at: null,
     });
@@ -320,6 +326,7 @@ export default function AdminPosts() {
       author: authors[0]?.name || 'Admin',
       image_url: '',
       image_caption: '',
+      tags: '',
       is_published: false,
       published_at: null,
     });
@@ -338,6 +345,7 @@ export default function AdminPosts() {
       author: post.author,
       image_url: post.image_url || '',
       image_caption: post.image_caption || '',
+      tags: post.tags?.join(', ') || '',
       is_published: post.is_published ?? false,
       published_at: post.published_at ? new Date(post.published_at) : null,
     });
@@ -349,6 +357,11 @@ export default function AdminPosts() {
     try {
       const publishedAt = values.is_published 
         ? (values.published_at?.toISOString() || new Date().toISOString())
+        : null;
+      
+      // Parse tags from comma-separated string
+      const tagsArray = values.tags
+        ? values.tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
         : null;
 
       if (editingPost) {
@@ -363,15 +376,24 @@ export default function AdminPosts() {
             author: values.author,
             image_url: values.image_url || null,
             image_caption: values.image_caption || null,
+            tags: tagsArray,
             is_published: values.is_published,
             published_at: publishedAt,
           })
           .eq('id', editingPost.id);
 
         if (error) throw error;
+        
+        await logActivity({
+          action: 'update',
+          entityType: 'post',
+          entityId: editingPost.id,
+          entityName: values.title,
+        });
+        
         toast({ title: 'Berhasil', description: 'Artikel berhasil diperbarui' });
       } else {
-        const { error } = await supabase.from('posts').insert([{
+        const { data, error } = await supabase.from('posts').insert([{
           title: values.title,
           slug: values.slug,
           excerpt: values.excerpt || null,
@@ -380,13 +402,22 @@ export default function AdminPosts() {
           author: values.author,
           image_url: values.image_url || null,
           image_caption: values.image_caption || null,
+          tags: tagsArray,
           is_published: values.is_published,
           published_at: publishedAt,
-        }]);
+        }]).select('id').single();
 
         if (error) throw error;
+        
+        await logActivity({
+          action: 'create',
+          entityType: 'post',
+          entityId: data?.id,
+          entityName: values.title,
+        });
+        
         toast({ title: 'Berhasil', description: 'Artikel berhasil ditambahkan' });
-        clearDraft(); // Clear draft after successful save
+        clearDraft();
       }
 
       setIsDialogOpen(false);
@@ -406,11 +437,20 @@ export default function AdminPosts() {
   };
 
   const deletePost = async (id: string) => {
+    const postToDelete = posts.find(p => p.id === id);
     if (!confirm('Yakin ingin menghapus artikel ini?')) return;
 
     try {
       const { error } = await supabase.from('posts').delete().eq('id', id);
       if (error) throw error;
+      
+      await logActivity({
+        action: 'delete',
+        entityType: 'post',
+        entityId: id,
+        entityName: postToDelete?.title,
+      });
+      
       toast({ title: 'Berhasil', description: 'Artikel berhasil dihapus' });
       fetchPosts();
     } catch (error) {
@@ -657,6 +697,26 @@ export default function AdminPosts() {
                       </FormControl>
                       <p className="text-xs text-muted-foreground">
                         Untuk memberi kredit kepada fotografer atau ilustrator
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="tags"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tags</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="pendidikan, islam, pesantren (pisahkan dengan koma)" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <p className="text-xs text-muted-foreground">
+                        Pisahkan beberapa tag dengan koma
                       </p>
                       <FormMessage />
                     </FormItem>

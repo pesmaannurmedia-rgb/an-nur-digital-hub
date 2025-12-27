@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useActivityLog } from '@/hooks/useActivityLog';
 import { Loader2, Plus, Save, Trash2, GripVertical, Eye, EyeOff, Star, Quote, Upload, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
@@ -132,6 +133,7 @@ export default function AdminTestimonials() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const { logActivity } = useActivityLog();
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -230,10 +232,20 @@ export default function AdminTestimonials() {
     try {
       if (editingTestimonial.id.startsWith('new-')) {
         const { id, ...testimonialData } = editingTestimonial;
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('testimonials')
-          .insert({ ...testimonialData, position: testimonials.length });
+          .insert({ ...testimonialData, position: testimonials.length })
+          .select('id')
+          .single();
         if (error) throw error;
+        
+        await logActivity({
+          action: 'create',
+          entityType: 'testimonial',
+          entityId: data?.id,
+          entityName: editingTestimonial.name,
+        });
+        
         toast.success('Testimoni berhasil ditambahkan');
       } else {
         const { error } = await supabase
@@ -248,6 +260,14 @@ export default function AdminTestimonials() {
           })
           .eq('id', editingTestimonial.id);
         if (error) throw error;
+        
+        await logActivity({
+          action: 'update',
+          entityType: 'testimonial',
+          entityId: editingTestimonial.id,
+          entityName: editingTestimonial.name,
+        });
+        
         toast.success('Testimoni berhasil diperbarui');
       }
       
@@ -265,6 +285,8 @@ export default function AdminTestimonials() {
   const handleDelete = async () => {
     if (!deleteId) return;
     
+    const testimonialToDelete = testimonials.find(t => t.id === deleteId);
+    
     try {
       const { error } = await supabase
         .from('testimonials')
@@ -272,6 +294,14 @@ export default function AdminTestimonials() {
         .eq('id', deleteId);
 
       if (error) throw error;
+      
+      await logActivity({
+        action: 'delete',
+        entityType: 'testimonial',
+        entityId: deleteId,
+        entityName: testimonialToDelete?.name,
+      });
+      
       toast.success('Testimoni berhasil dihapus');
       setDeleteId(null);
       fetchTestimonials();

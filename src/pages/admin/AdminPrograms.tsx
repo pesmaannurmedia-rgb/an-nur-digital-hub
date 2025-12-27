@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useActivityLog } from '@/hooks/useActivityLog';
 import { Loader2, Plus, Save, Trash2, GripVertical, Eye, EyeOff, BookOpen } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
@@ -121,6 +122,7 @@ export default function AdminPrograms() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
+  const { logActivity } = useActivityLog();
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -190,10 +192,20 @@ export default function AdminPrograms() {
     try {
       if (editingProgram.id.startsWith('new-')) {
         const { id, ...programData } = editingProgram;
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('programs')
-          .insert({ ...programData, position: programs.length });
+          .insert({ ...programData, position: programs.length })
+          .select('id')
+          .single();
         if (error) throw error;
+        
+        await logActivity({
+          action: 'create',
+          entityType: 'program',
+          entityId: data?.id,
+          entityName: editingProgram.title,
+        });
+        
         toast.success('Program berhasil ditambahkan');
       } else {
         const { error } = await supabase
@@ -206,6 +218,14 @@ export default function AdminPrograms() {
           })
           .eq('id', editingProgram.id);
         if (error) throw error;
+        
+        await logActivity({
+          action: 'update',
+          entityType: 'program',
+          entityId: editingProgram.id,
+          entityName: editingProgram.title,
+        });
+        
         toast.success('Program berhasil diperbarui');
       }
       
@@ -223,6 +243,8 @@ export default function AdminPrograms() {
   const handleDelete = async () => {
     if (!deleteId) return;
     
+    const programToDelete = programs.find(p => p.id === deleteId);
+    
     try {
       const { error } = await supabase
         .from('programs')
@@ -230,6 +252,14 @@ export default function AdminPrograms() {
         .eq('id', deleteId);
 
       if (error) throw error;
+      
+      await logActivity({
+        action: 'delete',
+        entityType: 'program',
+        entityId: deleteId,
+        entityName: programToDelete?.title,
+      });
+      
       toast.success('Program berhasil dihapus');
       setDeleteId(null);
       fetchPrograms();

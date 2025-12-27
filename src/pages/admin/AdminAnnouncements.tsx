@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useActivityLog } from '@/hooks/useActivityLog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -91,6 +92,7 @@ export default function AdminAnnouncements() {
   const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { logActivity } = useActivityLog();
 
   const form = useForm<AnnouncementFormValues>({
     resolver: zodResolver(announcementSchema),
@@ -168,17 +170,33 @@ export default function AdminAnnouncements() {
           .eq('id', editingAnnouncement.id);
 
         if (error) throw error;
+        
+        await logActivity({
+          action: 'update',
+          entityType: 'announcement',
+          entityId: editingAnnouncement.id,
+          entityName: values.title,
+        });
+        
         toast({ title: 'Berhasil', description: 'Pengumuman berhasil diperbarui' });
       } else {
-        const { error } = await supabase.from('announcements').insert([{
+        const { data, error } = await supabase.from('announcements').insert([{
           title: values.title,
           content: values.content || null,
           link: values.link || null,
           icon: values.icon,
           is_active: values.is_active,
-        }]);
+        }]).select('id').single();
 
         if (error) throw error;
+        
+        await logActivity({
+          action: 'create',
+          entityType: 'announcement',
+          entityId: data?.id,
+          entityName: values.title,
+        });
+        
         toast({ title: 'Berhasil', description: 'Pengumuman berhasil ditambahkan' });
       }
 
@@ -197,11 +215,20 @@ export default function AdminAnnouncements() {
   };
 
   const deleteAnnouncement = async (id: string) => {
+    const announcementToDelete = announcements.find(a => a.id === id);
     if (!confirm('Yakin ingin menghapus pengumuman ini?')) return;
 
     try {
       const { error } = await supabase.from('announcements').delete().eq('id', id);
       if (error) throw error;
+      
+      await logActivity({
+        action: 'delete',
+        entityType: 'announcement',
+        entityId: id,
+        entityName: announcementToDelete?.title,
+      });
+      
       toast({ title: 'Berhasil', description: 'Pengumuman berhasil dihapus' });
       fetchAnnouncements();
     } catch (error) {
