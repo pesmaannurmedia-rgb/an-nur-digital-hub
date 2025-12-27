@@ -243,6 +243,21 @@ export default function AdminSiteSettings() {
                   rows={2}
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="site_url" className="flex items-center gap-2">
+                  <Globe className="h-4 w-4" />
+                  URL Website (Domain)
+                </Label>
+                <Input
+                  id="site_url"
+                  value={settings.site_url || ''}
+                  onChange={(e) => handleChange('site_url', e.target.value)}
+                  placeholder="https://www.example.com"
+                />
+                <p className="text-xs text-muted-foreground">
+                  URL domain utama untuk sitemap.xml dan SEO (tanpa trailing slash)
+                </p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
