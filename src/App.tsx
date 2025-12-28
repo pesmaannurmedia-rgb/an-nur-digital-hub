@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import BlogPage from "./pages/BlogPage";
 import BlogSinglePage from "./pages/BlogSinglePage";
+import TagPage from "./pages/TagPage";
 import ShopPage from "./pages/ShopPage";
 import ShopSinglePage from "./pages/ShopSinglePage";
 import PageSingle from "./pages/PageSingle";
@@ -47,6 +48,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/blog" element={<BlogPage />} />
               <Route path="/blog/:slug" element={<BlogSinglePage />} />
+              <Route path="/tag/:slug" element={<TagPage />} />
               <Route path="/shop" element={<ShopPage />} />
               <Route path="/shop/:slug" element={<ShopSinglePage />} />
               <Route path="/page/:slug" element={<PageSingle />} />

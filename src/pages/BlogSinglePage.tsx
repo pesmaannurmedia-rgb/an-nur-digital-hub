@@ -66,7 +66,7 @@ const BlogSinglePage = () => {
         setNotFound(true);
       } else {
         setPost(data);
-        fetchRelatedPosts(data.id, data.category);
+        fetchRelatedPosts(data.id, data.category, data.tags);
         fetchAuthor(data.author);
       }
     } catch (error) {
@@ -94,8 +94,25 @@ const BlogSinglePage = () => {
     }
   };
 
-  const fetchRelatedPosts = async (currentId: string, category: string) => {
+  const fetchRelatedPosts = async (currentId: string, category: string, tags: string[] | null) => {
     try {
+      // First try to get posts with matching tags
+      if (tags && tags.length > 0) {
+        const { data: tagRelated } = await supabase
+          .from('posts')
+          .select('id, title, slug')
+          .eq('is_published', true)
+          .neq('id', currentId)
+          .overlaps('tags', tags)
+          .limit(4);
+
+        if (tagRelated && tagRelated.length > 0) {
+          setRelatedPosts(tagRelated);
+          return;
+        }
+      }
+
+      // Fallback to category-based related posts
       const { data } = await supabase
         .from('posts')
         .select('id, title, slug')
@@ -108,6 +125,10 @@ const BlogSinglePage = () => {
     } catch (error) {
       console.error('Error fetching related posts:', error);
     }
+  };
+
+  const getTagSlug = (tag: string) => {
+    return encodeURIComponent(tag.toLowerCase().replace(/\s+/g, '-'));
   };
 
   const formatDate = (dateString: string | null) => {
@@ -219,13 +240,14 @@ const BlogSinglePage = () => {
                 <Tag className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-medium text-muted-foreground mr-2">Tags:</span>
                 {post.tags.map((tag, index) => (
-                  <Badge 
-                    key={index} 
-                    variant="secondary" 
-                    className="text-sm hover:bg-secondary/80 cursor-pointer"
-                  >
-                    {tag}
-                  </Badge>
+                  <Link key={index} to={`/tag/${getTagSlug(tag)}`}>
+                    <Badge 
+                      variant="secondary" 
+                      className="text-sm hover:bg-primary hover:text-primary-foreground transition-colors cursor-pointer"
+                    >
+                      {tag}
+                    </Badge>
+                  </Link>
                 ))}
               </div>
             </div>
