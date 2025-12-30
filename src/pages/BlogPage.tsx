@@ -1,6 +1,6 @@
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Link } from "react-router-dom";
-import { Search, Calendar, User, ArrowRight, Loader2, FileText, Tag } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
+import { Search, Calendar, User, ArrowRight, Loader2, FileText, Tag, FolderOpen } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,9 +22,11 @@ interface Post {
 }
 
 const BlogPage = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const selectedCategory = searchParams.get("category") || "";
 
   useEffect(() => {
     fetchPosts();
@@ -47,10 +49,21 @@ const BlogPage = () => {
     }
   };
 
-  const filtered = posts.filter(p => 
-    p.title.toLowerCase().includes(search.toLowerCase()) ||
-    p.category.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = posts.filter(p => {
+    const matchesSearch = p.title.toLowerCase().includes(search.toLowerCase()) ||
+      p.category.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = !selectedCategory || p.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  // Calculate categories with counts
+  const categories = useMemo(() => {
+    const catCount: Record<string, number> = {};
+    posts.forEach(post => {
+      catCount[post.category] = (catCount[post.category] || 0) + 1;
+    });
+    return Object.entries(catCount).sort((a, b) => b[1] - a[1]);
+  }, [posts]);
 
   // Calculate popular tags
   const popularTags = useMemo(() => {
@@ -139,8 +152,46 @@ const BlogPage = () => {
             </div>
 
             {/* Sidebar */}
-            <aside className="w-full lg:w-72 shrink-0">
+            <aside className="w-full lg:w-72 shrink-0 space-y-6">
+              {/* Categories */}
               <div className="bg-card border border-border rounded-xl p-5 sticky top-24">
+                <h3 className="font-semibold text-foreground flex items-center gap-2 mb-4">
+                  <FolderOpen className="w-4 h-4 text-primary" />
+                  Kategori
+                </h3>
+                {categories.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Belum ada kategori</p>
+                ) : (
+                  <div className="space-y-1">
+                    <button
+                      onClick={() => setSearchParams({})}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                        !selectedCategory 
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'hover:bg-muted text-foreground'
+                      }`}
+                    >
+                      Semua <span className="opacity-70">({posts.length})</span>
+                    </button>
+                    {categories.map(([cat, count]) => (
+                      <button
+                        key={cat}
+                        onClick={() => setSearchParams({ category: cat })}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                          selectedCategory === cat 
+                            ? 'bg-primary text-primary-foreground' 
+                            : 'hover:bg-muted text-foreground'
+                        }`}
+                      >
+                        {cat} <span className="opacity-70">({count})</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Popular Tags */}
+              <div className="bg-card border border-border rounded-xl p-5">
                 <h3 className="font-semibold text-foreground flex items-center gap-2 mb-4">
                   <Tag className="w-4 h-4 text-primary" />
                   Popular Tags
