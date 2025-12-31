@@ -1,0 +1,3 @@
+[install]
+# Force the standard npm registry to avoid slow/misconfigured defaults
+registry = "https://registry.npmjs.org/"
