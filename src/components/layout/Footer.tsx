@@ -13,6 +13,7 @@ interface SiteSettings {
   social_youtube?: string;
   social_facebook?: string;
   social_twitter?: string;
+  logo_url?: string;
 }
 
 export function Footer() {
@@ -59,10 +60,21 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="lg:col-span-2">
-            <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">ا</span>
-              </div>
+            <Link to="/" className="flex items-center gap-3 mb-4">
+              {settings.logo_url ? (
+                <img 
+                  src={settings.logo_url} 
+                  alt={siteName} 
+                  className="h-10 w-auto object-contain"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+                  <span className="text-primary-foreground font-bold text-lg">ا</span>
+                </div>
+              )}
               <span className="font-bold text-xl text-foreground">{siteName}</span>
             </Link>
             <p className="text-muted-foreground mb-6 max-w-md">
