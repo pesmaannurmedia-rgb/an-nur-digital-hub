@@ -277,29 +277,44 @@ const BlogSinglePage = () => {
       </article>
 
       {/* JSON-LD Structured Data */}
-      <script type="application/ld+json">
-        {JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "Article",
-          "headline": post.title,
-          "description": post.excerpt || '',
-          "image": post.image_url || undefined,
-          "author": {
-            "@type": "Person",
-            "name": post.author
-          },
-          "publisher": {
-            "@type": "Organization",
-            "name": siteName
-          },
-          "datePublished": post.published_at || undefined,
-          "keywords": post.tags?.join(', ') || undefined,
-          "mainEntityOfPage": {
-            "@type": "WebPage",
-            "@id": currentUrl
-          }
-        })}
-      </script>
+      <Helmet>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BlogPosting",
+            "headline": post.title,
+            "description": post.excerpt || '',
+            "image": post.image_url ? {
+              "@type": "ImageObject",
+              "url": post.image_url
+            } : undefined,
+            "author": {
+              "@type": "Person",
+              "name": post.author,
+              "image": author?.image_url || undefined,
+              "description": author?.bio || undefined
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": siteName,
+              "logo": {
+                "@type": "ImageObject",
+                "url": `${typeof window !== 'undefined' ? window.location.origin : ''}/favicon.ico`
+              }
+            },
+            "datePublished": post.published_at || undefined,
+            "dateModified": post.published_at || undefined,
+            "keywords": post.tags?.join(', ') || undefined,
+            "articleSection": post.category,
+            "inLanguage": "id-ID",
+            "mainEntityOfPage": {
+              "@type": "WebPage",
+              "@id": currentUrl
+            },
+            "url": currentUrl
+          })}
+        </script>
+      </Helmet>
     </MainLayout>
   );
 };

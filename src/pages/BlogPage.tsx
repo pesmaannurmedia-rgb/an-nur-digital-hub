@@ -134,6 +134,47 @@ const BlogPage = () => {
     return pages;
   };
 
+  const siteName = "Pesantren An-Nur";
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
+
+  // Generate JSON-LD ItemList schema for blog listing
+  const jsonLdSchema = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Blog & Kajian | Pesantren An-Nur",
+    "description": "Artikel, kajian Islam, dan pengumuman resmi dari Pesantren An-Nur.",
+    "url": currentUrl,
+    "publisher": {
+      "@type": "Organization",
+      "name": siteName,
+      "logo": {
+        "@type": "ImageObject",
+        "url": `${baseUrl}/favicon.ico`
+      }
+    },
+    "mainEntity": {
+      "@type": "ItemList",
+      "itemListElement": paginatedPosts.map((post, index) => ({
+        "@type": "ListItem",
+        "position": index + 1,
+        "item": {
+          "@type": "BlogPosting",
+          "headline": post.title,
+          "description": post.excerpt || '',
+          "url": `${baseUrl}/blog/${post.slug}`,
+          "image": post.image_url || undefined,
+          "datePublished": post.published_at || undefined,
+          "author": {
+            "@type": "Person",
+            "name": post.author
+          },
+          "articleSection": post.category
+        }
+      }))
+    }
+  };
+
   return (
     <MainLayout>
       <Helmet>
@@ -144,7 +185,10 @@ const BlogPage = () => {
         <meta property="og:type" content="website" />
         <meta name="twitter:card" content="summary" />
         <meta name="twitter:title" content="Blog & Kajian | Pesantren An-Nur" />
-        <link rel="canonical" href={typeof window !== 'undefined' ? window.location.href : ''} />
+        <link rel="canonical" href={currentUrl} />
+        <script type="application/ld+json">
+          {JSON.stringify(jsonLdSchema)}
+        </script>
       </Helmet>
 
       <section className="py-16 bg-surface min-h-screen">
