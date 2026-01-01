@@ -23,14 +23,14 @@ interface MenuItem {
 }
 
 interface HeaderSettings {
-  header_logo_url: string;
-  header_site_name: string;
+  logo_url: string;
+  site_name: string;
   header_site_name_short: string;
 }
 
 const defaultHeaderSettings: HeaderSettings = {
-  header_logo_url: "",
-  header_site_name: "Pesantren Mahasiswa An-Nur",
+  logo_url: "",
+  site_name: "Pesantren Mahasiswa An-Nur",
   header_site_name_short: "An-Nur",
 };
 
@@ -65,7 +65,7 @@ export function Navbar() {
       if (data) {
         const settingsMap: Partial<HeaderSettings> = {};
         data.forEach((item) => {
-          if (item.key.startsWith('header_') && item.value) {
+          if (['logo_url', 'site_name', 'header_site_name_short'].includes(item.key) && item.value) {
             settingsMap[item.key as keyof HeaderSettings] = item.value;
           }
         });
@@ -293,18 +293,21 @@ export function Navbar() {
           to="/" 
           className="flex items-center gap-2 font-bold text-lg md:text-xl text-foreground hover:text-primary transition-colors"
         >
-          {headerSettings.header_logo_url ? (
+          {headerSettings.logo_url ? (
             <img 
-              src={headerSettings.header_logo_url} 
-              alt={headerSettings.header_site_name}
-              className="w-10 h-10 rounded-full object-cover"
+              src={headerSettings.logo_url} 
+              alt={headerSettings.site_name}
+              className="h-10 w-auto object-contain"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
             />
           ) : (
             <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
               <span className="text-primary-foreground font-bold text-lg">ا</span>
             </div>
           )}
-          <span className="hidden sm:inline">{headerSettings.header_site_name}</span>
+          <span className="hidden sm:inline">{headerSettings.site_name}</span>
           <span className="sm:hidden">{headerSettings.header_site_name_short}</span>
         </Link>
 
