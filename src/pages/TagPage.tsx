@@ -63,17 +63,63 @@ const TagPage = () => {
     return format(new Date(dateString), 'd MMM yyyy', { locale: id });
   };
 
+  const siteName = "Pesantren An-Nur";
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
+
+  // Generate JSON-LD schema for tag page
+  const jsonLdSchema = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": `Tag: ${tagName} | ${siteName}`,
+    "description": `Artikel dengan tag "${tagName}" di ${siteName}. Temukan artikel terkait topik ${tagName}.`,
+    "url": currentUrl,
+    "publisher": {
+      "@type": "Organization",
+      "name": siteName,
+      "logo": {
+        "@type": "ImageObject",
+        "url": `${baseUrl}/favicon.ico`
+      }
+    },
+    "mainEntity": {
+      "@type": "ItemList",
+      "numberOfItems": filtered.length,
+      "itemListElement": filtered.map((post, index) => ({
+        "@type": "ListItem",
+        "position": index + 1,
+        "item": {
+          "@type": "BlogPosting",
+          "headline": post.title,
+          "description": post.excerpt || '',
+          "url": `${baseUrl}/blog/${post.slug}`,
+          "image": post.image_url || undefined,
+          "datePublished": post.published_at || undefined,
+          "author": {
+            "@type": "Person",
+            "name": post.author
+          },
+          "articleSection": post.category,
+          "keywords": tagName
+        }
+      }))
+    }
+  };
+
   return (
     <MainLayout>
       <Helmet>
-        <title>Tag: {tagName} | Pesantren An-Nur</title>
-        <meta name="description" content={`Artikel dengan tag "${tagName}" di Pesantren An-Nur. Temukan artikel terkait topik ${tagName}.`} />
-        <meta property="og:title" content={`Tag: ${tagName} | Pesantren An-Nur`} />
-        <meta property="og:description" content={`Artikel dengan tag "${tagName}" di Pesantren An-Nur.`} />
+        <title>Tag: {tagName} | {siteName}</title>
+        <meta name="description" content={`Artikel dengan tag "${tagName}" di ${siteName}. Temukan artikel terkait topik ${tagName}.`} />
+        <meta property="og:title" content={`Tag: ${tagName} | ${siteName}`} />
+        <meta property="og:description" content={`Artikel dengan tag "${tagName}" di ${siteName}.`} />
         <meta property="og:type" content="website" />
         <meta name="twitter:card" content="summary" />
-        <meta name="twitter:title" content={`Tag: ${tagName} | Pesantren An-Nur`} />
-        <link rel="canonical" href={typeof window !== 'undefined' ? window.location.href : ''} />
+        <meta name="twitter:title" content={`Tag: ${tagName} | ${siteName}`} />
+        <link rel="canonical" href={currentUrl} />
+        <script type="application/ld+json">
+          {JSON.stringify(jsonLdSchema)}
+        </script>
       </Helmet>
 
       <section className="py-16 bg-surface min-h-screen">
