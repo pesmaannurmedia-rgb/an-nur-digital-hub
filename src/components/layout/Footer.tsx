@@ -16,34 +16,55 @@ interface SiteSettings {
   logo_url?: string;
 }
 
+interface QuickLink {
+  id: string;
+  title: string;
+  url: string;
+  is_external: boolean | null;
+}
+
+const defaultQuickLinks = [
+  { id: "1", title: "Beranda", url: "/", is_external: false },
+  { id: "2", title: "Program", url: "/#program", is_external: false },
+  { id: "3", title: "Blog", url: "/blog", is_external: false },
+  { id: "4", title: "Toko", url: "/shop", is_external: false },
+  { id: "5", title: "Kontak", url: "/#kontak", is_external: false },
+];
+
 export function Footer() {
   const currentYear = new Date().getFullYear();
   const [settings, setSettings] = useState<SiteSettings>({});
+  const [quickLinks, setQuickLinks] = useState<QuickLink[]>(defaultQuickLinks);
 
   useEffect(() => {
-    const fetchSettings = async () => {
-      const { data } = await supabase
+    const fetchData = async () => {
+      // Fetch site settings
+      const { data: settingsData } = await supabase
         .from('site_settings')
         .select('key, value');
       
-      if (data) {
+      if (settingsData) {
         const settingsObj: SiteSettings = {};
-        data.forEach(item => {
+        settingsData.forEach(item => {
           settingsObj[item.key as keyof SiteSettings] = item.value || '';
         });
         setSettings(settingsObj);
       }
-    };
-    fetchSettings();
-  }, []);
 
-  const quickLinks = [
-    { label: "Beranda", href: "/" },
-    { label: "Program", href: "/#program" },
-    { label: "Blog", href: "/blog" },
-    { label: "Toko", href: "/shop" },
-    { label: "Kontak", href: "/#kontak" },
-  ];
+      // Fetch footer quick links
+      const { data: linksData } = await supabase
+        .from('menu_links')
+        .select('id, title, url, is_external')
+        .eq('group_name', 'footer')
+        .eq('is_active', true)
+        .order('position');
+      
+      if (linksData && linksData.length > 0) {
+        setQuickLinks(linksData);
+      }
+    };
+    fetchData();
+  }, []);
 
   const socialLinks = [
     { icon: Instagram, href: settings.social_instagram || "#", label: "Instagram", show: !!settings.social_instagram },
@@ -103,13 +124,24 @@ export function Footer() {
             <h4 className="font-semibold text-foreground mb-4">Link Cepat</h4>
             <ul className="space-y-3">
               {quickLinks.map((link) => (
-                <li key={link.label}>
-                  <Link
-                    to={link.href}
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    {link.label}
-                  </Link>
+                <li key={link.id}>
+                  {link.is_external ? (
+                    <a
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      {link.title}
+                    </a>
+                  ) : (
+                    <Link
+                      to={link.url}
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      {link.title}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
