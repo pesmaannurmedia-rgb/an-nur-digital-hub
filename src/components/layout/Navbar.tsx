@@ -25,13 +25,13 @@ interface MenuItem {
 interface HeaderSettings {
   logo_url: string;
   site_name: string;
-  header_site_name_short: string;
+  site_name_short: string;
 }
 
 const defaultHeaderSettings: HeaderSettings = {
   logo_url: "",
   site_name: "Pesantren Mahasiswa An-Nur",
-  header_site_name_short: "An-Nur",
+  site_name_short: "An-Nur",
 };
 
 // Fallback menu jika database kosong
@@ -65,7 +65,7 @@ export function Navbar() {
       if (data) {
         const settingsMap: Partial<HeaderSettings> = {};
         data.forEach((item) => {
-          if (['logo_url', 'site_name', 'header_site_name_short'].includes(item.key) && item.value) {
+          if (['logo_url', 'site_name', 'site_name_short'].includes(item.key) && item.value) {
             settingsMap[item.key as keyof HeaderSettings] = item.value;
           }
         });
@@ -308,7 +308,7 @@ export function Navbar() {
             </div>
           )}
           <span className="hidden sm:inline">{headerSettings.site_name}</span>
-          <span className="sm:hidden">{headerSettings.header_site_name_short}</span>
+          <span className="sm:hidden">{headerSettings.site_name_short}</span>
         </Link>
 
         {/* Desktop Menu */}

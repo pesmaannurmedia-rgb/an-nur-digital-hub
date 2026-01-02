@@ -234,6 +234,18 @@ export default function AdminSiteSettings() {
                 />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="site_name_short">Nama Singkat (Mobile)</Label>
+                <Input
+                  id="site_name_short"
+                  value={settings.site_name_short || ''}
+                  onChange={(e) => handleChange('site_name_short', e.target.value)}
+                  placeholder="Nama pendek untuk tampilan mobile"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Ditampilkan di navbar pada layar kecil/mobile
+                </p>
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="site_tagline">Tagline</Label>
                 <Textarea
                   id="site_tagline"
