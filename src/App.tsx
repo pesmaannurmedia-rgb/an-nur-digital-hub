@@ -13,6 +13,7 @@ import ShopPage from "./pages/ShopPage";
 import ShopSinglePage from "./pages/ShopSinglePage";
 import PageSingle from "./pages/PageSingle";
 import AuthPage from "./pages/AuthPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -54,6 +55,7 @@ const App = () => (
               <Route path="/page/:slug" element={<PageSingle />} />
               <Route path="/halaman/:slug" element={<PageSingle />} />
               <Route path="/auth" element={<AuthPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="homepage" element={<AdminHomepage />} />
